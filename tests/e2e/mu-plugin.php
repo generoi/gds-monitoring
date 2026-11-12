@@ -13,6 +13,13 @@ add_filter('gds/monitoring/write', function (bool $write, string $line): bool {
     return $write;
 }, 10, 2);
 
+// A page's upload nonce that expires within seconds, as a day-old cached page's.
+add_filter('nonce_life', function ($life, $action = '') {
+    $short = (int) get_option('gds_monitoring_e2e_upload_nonce_life');
+
+    return $short && str_starts_with((string) $action, 'gform_file_upload_') ? $short : $life;
+}, 10, 2);
+
 add_action('gform_loaded', function (): void {
     GFForms::include_feed_addon_framework();
 

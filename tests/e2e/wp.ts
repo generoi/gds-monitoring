@@ -13,8 +13,8 @@ export function wp(...args: string[]): string {
 export type Setup = { form: number; feed: number; page: string; gf: string };
 
 /** A fresh form, its failing feed and the page showing it. */
-export function setup(): Setup {
-    return JSON.parse(wp('eval-file', 'wp-content/plugins/gds-monitoring/tests/e2e/setup.php'));
+export function setup(...args: string[]): Setup {
+    return JSON.parse(wp('eval-file', 'wp-content/plugins/gds-monitoring/tests/e2e/setup.php', ...args));
 }
 
 /** The lines gds-monitoring wrote since setup(). */

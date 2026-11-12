@@ -52,6 +52,52 @@ test('a submission from a stale page is kept as spam and logged', async ({ page 
     ]);
 });
 
+/**
+ * A choice the form no longer offers, as from a page cached before the form
+ * was edited: Gravity Forms refuses it and saves nothing.
+ */
+test('a submission failing the state check is logged', async ({ page }) => {
+    site = setup('validate-state');
+    await fill(page);
+    await page.locator(`#input_${site.form}_2 option[value="large"]`).evaluate((option: HTMLOptionElement) => {
+        option.value = 'medium';
+    });
+    await page.locator(`#input_${site.form}_2`).selectOption('medium');
+    await page.locator('input[type="submit"], button[type="submit"]').first().click();
+
+    await expect(page.locator(`#field_${site.form}_2 .gfield_validation_message`)).toBeVisible();
+    expect(lines()).toEqual([`gds-monitoring: gform state invalid blog 1 form ${site.form} fields 2`]);
+});
+
+async function upload(page: Page): Promise<void> {
+    await page.locator(`#gform_multifile_upload_${site.form}_3 input[type="file"]`).setInputFiles({
+        name: 'note.txt', mimeType: 'text/plain', buffer: Buffer.from('hello'),
+    });
+}
+
+test('a multi-file upload is not logged', async ({ page }) => {
+    await fill(page);
+    await upload(page);
+
+    await expect(page.locator(`#gform_preview_${site.form}_3`)).toContainText('note.txt');
+    await expect(page.getByText('Your session has expired')).toHaveCount(0);
+    expect(lines()).toEqual([]);
+});
+
+/**
+ * The page's upload nonce expired, as on a page cached for more than a day:
+ * the visitor's file is refused before the form is sent.
+ */
+test('an upload refused for an expired nonce is logged', async ({ page }) => {
+    site = setup('expire-uploads');
+    await fill(page);
+    await page.waitForTimeout(4000);
+    await upload(page);
+
+    await expect(page.getByText('Your session has expired')).toBeVisible();
+    await expect.poll(lines).toEqual([`gds-monitoring: gform upload nonce expired blog 1 form ${site.form} field 3`]);
+});
+
 test('a bot filling the honeypot is kept as spam but not logged', async ({ page }) => {
     await fill(page);
     await page.locator('.gform_validation_container input').evaluate((input: HTMLInputElement) => {

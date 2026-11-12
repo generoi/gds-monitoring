@@ -10,6 +10,7 @@ use GeneroWP\Monitoring\Checks\Heartbeat;
 use GeneroWP\Monitoring\Checks\MailFailures;
 use GeneroWP\Monitoring\Checks\Scheduled;
 use GeneroWP\Monitoring\Checks\SpamEntries;
+use GeneroWP\Monitoring\Checks\StaleForms;
 
 final class Plugin
 {
@@ -23,6 +24,7 @@ final class Plugin
         return [
             new SpamEntries,
             new EntryErrorNotes,
+            new StaleForms,
             new MailFailures,
             new FeedsNotRun,
             new FormSilence,
