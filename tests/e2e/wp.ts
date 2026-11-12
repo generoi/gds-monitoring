@@ -10,7 +10,7 @@ export function wp(...args: string[]): string {
     return lines[lines.length - 1] ?? '';
 }
 
-export type Setup = { form: number; feed: number; page: string };
+export type Setup = { form: number; feed: number; page: string; gf: string };
 
 /** A fresh form, its failing feed and the page showing it. */
 export function setup(): Setup {

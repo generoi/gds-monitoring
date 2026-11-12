@@ -22,4 +22,4 @@ $page = wp_insert_post([
 ]);
 delete_option('gds_monitoring_e2e_lines');
 
-echo wp_json_encode(['form' => $form, 'feed' => $feed, 'page' => get_permalink($page)]), "\n";
+echo wp_json_encode(['form' => $form, 'feed' => $feed, 'page' => get_permalink($page), 'gf' => GFForms::$version]), "\n";

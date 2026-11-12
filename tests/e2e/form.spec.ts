@@ -39,6 +39,7 @@ test('a submission whose feed fails is logged as a feed error', async ({ page })
  * honeypot keeps the submission as spam, and a person should look at it.
  */
 test('a submission from a stale page is kept as spam and logged', async ({ page }) => {
+    test.skip(Number.parseInt(site.gf, 10) < 3, 'Gravity Forms 2.x does not check the state token in its honeypot');
     await fill(page);
     await page.locator(`input[name="state_${site.form}"]`).evaluate((input: HTMLInputElement) => {
         input.value = btoa('["{}","0000",1]');
