@@ -25,6 +25,12 @@ Each is a class in `src/Checks/`.
 | `FormSilence` | Hourly: an active form with 10+ entries in 90 days quiet for 1.5× its longest gap in them, and at least a day | `gform silent blog 2 form 4: no entry for 40 h, longest gap in 90 days 15 h` |
 | `Heartbeat` | Once a day, so a site that stopped logging can be told from a quiet one | `heartbeat` |
 
+A line written during cron or WP-CLI is queued (the latest 200, network-wide)
+and written by the next ordinary request: `wp-cron.php` ends the web request
+before WordPress loads, so the web server no longer takes its error log, and
+a crontab's WP-CLI usually discards stderr. Monitoring sees such a line when
+it's written, not when the check ran.
+
 The hourly checks run from the main site's cron and visit every site of a
 network where Gravity Forms is active, counting only feeds whose add-on is
 active there. Gravity Forms has to be active on the main site too, for its
