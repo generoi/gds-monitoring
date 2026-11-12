@@ -4,3 +4,5 @@ composer.lock
 patches.lock.json
 .phpunit.result.cache
 .wp-env.override.json
+/test-results/
+/playwright-report/

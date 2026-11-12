@@ -21,7 +21,7 @@
         "php": ">=8.1"
     },
     "require-dev": {
-        "generoi/gravityforms": "^3.0",
+        "generoi/gravityforms": "^2.0 || ^3.0",
         "laravel/pint": "^1.17",
         "phpstan/phpstan": "^2.2",
         "phpunit/phpunit": "^9.0",

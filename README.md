@@ -16,11 +16,11 @@ Each is a class in `src/Checks/`.
 
 | Check | When | Line |
 |---|---|---|
-| `SpamEntries` | A Gravity Forms entry is marked as spam, except for reasons only bots give (a filled honeypot, no `version_hash`, the speed checks, identical repeat submissions, reCAPTCHA's low score). CleanTalk's verdict stands in for its missing reason | `gform spam blog 28 form 3 entry 3104 (Honeypot Spam Filter): The form failed state validation…` |
-| `EntryErrorNotes` | An error note on an entry: a failed feed of any add-on, a notification that couldn't be sent, a failed save | `gform gravityformsmailchimp error blog 28 form 3 entry 3107: Mailchimp feed: <email> is already a list member.` |
-| `MailFailures` | `wp_mail_failed`, from any plugin | `wp_mail failed blog 28: SMTP Error: The following recipients failed: <email> …` |
-| `FeedsNotRun` | Hourly: an active feed with no run recorded for entries 1–24 h old that meet its condition | `gform feed not run blog 28 form 3 feed 3 (gravityformsmailchimp): 4 of 9 entries in the last 24 h` |
-| `FormSilence` | Hourly: an active form with 10+ entries in 90 days quiet for 1.5× its longest gap in them, and at least a day | `gform silent blog 28 form 3: no entry for 40 h, longest gap in 90 days 15 h` |
+| `SpamEntries` | A Gravity Forms entry is marked as spam, except for reasons only bots give (a filled honeypot, no `version_hash`, the speed checks, identical repeat submissions, reCAPTCHA's low score). CleanTalk's verdict stands in for its missing reason | `gform spam blog 2 form 4 entry 120 (Honeypot Spam Filter): The form failed state validation…` |
+| `EntryErrorNotes` | An error note on an entry: a failed feed of any add-on, a notification that couldn't be sent, a failed save | `gform gravityformsmailchimp error blog 2 form 4 entry 121: Mailchimp feed: <email> is already a list member.` |
+| `MailFailures` | `wp_mail_failed`, from any plugin | `wp_mail failed blog 2: SMTP Error: The following recipients failed: <email> …` |
+| `FeedsNotRun` | Hourly: an active feed with no run recorded for entries 1–24 h old that meet its condition | `gform feed not run blog 2 form 4 feed 1 (gravityformsmailchimp): 4 of 9 entries in the last 24 h` |
+| `FormSilence` | Hourly: an active form with 10+ entries in 90 days quiet for 1.5× its longest gap in them, and at least a day | `gform silent blog 2 form 4: no entry for 40 h, longest gap in 90 days 15 h` |
 | `Heartbeat` | Once a day, so a site that stopped logging can be told from a quiet one | `heartbeat` |
 
 The hourly checks run from the main site's cron and visit every site of a
@@ -37,6 +37,7 @@ composer install
 npm install
 npm run env:start
 npm run test:php      # integration tests in wp-env, with the real Gravity Forms
+npm run test:e2e      # a visitor submitting real forms on wp-env's site, in the installed Google Chrome
 composer lint
 composer stan
 ```

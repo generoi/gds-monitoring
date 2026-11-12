@@ -17,7 +17,7 @@ jobs:
 
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
+          php-version: '8.5'
           coverage: none
 
       # Gravity Forms, a dev dependency, is in Genero's private packagist.
@@ -34,16 +34,22 @@ jobs:
         run: composer stan
 
   test:
+    name: test (Gravity Forms ${{ matrix.gravityforms }})
     runs-on: ubuntu-latest
     # Bounded so a wedged wp-env start cannot hold a runner for GitHub's
     # 360-minute default.
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        # The latest of each major.
+        gravityforms: ['^2.0', '^3.0']
     steps:
       - uses: actions/checkout@v4
 
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
+          php-version: '8.5'
           coverage: none
 
       - uses: actions/setup-node@v4
@@ -54,7 +60,8 @@ jobs:
         with:
           composer_bot_private_key: ${{ secrets.COMPOSER_BOT_PRIVATE_KEY }}
 
-      - run: composer install --no-interaction --prefer-dist
+      - name: Install with Gravity Forms ${{ matrix.gravityforms }}
+        run: composer require --dev "generoi/gravityforms:${{ matrix.gravityforms }}" --no-interaction --prefer-dist -W
       - run: npm ci --no-audit --no-fund
 
       - name: Start WordPress
@@ -62,3 +69,6 @@ jobs:
 
       - name: PHP integration tests
         run: npm run test:php
+
+      - name: End-to-end tests
+        run: npm run test:e2e

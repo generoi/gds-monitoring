@@ -1,5 +1,13 @@
 {
     "core": null,
-    "phpVersion": "8.4",
-    "plugins": ["."]
+    "phpVersion": "8.5",
+    "plugins": ["."],
+    "env": {
+        "development": {
+            "plugins": [".", "./vendor/generoi/gravityforms"],
+            "mappings": {
+                "wp-content/mu-plugins/gds-monitoring-e2e.php": "./tests/e2e/mu-plugin.php"
+            }
+        }
+    }
 }
