@@ -1,0 +1,12 @@
+includes:
+    - vendor/szepeviktor/phpstan-wordpress/extension.neon
+
+parameters:
+    level: 6
+    paths:
+        - src
+        - gds-monitoring.php
+    # Gravity Forms is a dev dependency for the tests; every check that uses it
+    # is behind class_exists().
+    scanDirectories:
+        - vendor/generoi/gravityforms

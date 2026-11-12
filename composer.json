@@ -1,0 +1,52 @@
+{
+    "name": "generoi/gds-monitoring",
+    "type": "wordpress-muplugin",
+    "license": "MIT",
+    "description": "Logs what a person should look at on a WordPress site (lost form submissions, failed feeds and emails, silent forms) for monitoring to pick up",
+    "homepage": "https://github.com/generoi/gds-monitoring",
+    "authors": [
+        {
+            "name": "Genero",
+            "email": "info@genero.fi"
+        }
+    ],
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://generoi.github.io/packagist/",
+            "only": ["generoi/*"]
+        }
+    ],
+    "require": {
+        "php": ">=8.1"
+    },
+    "require-dev": {
+        "generoi/gravityforms": "^3.0",
+        "laravel/pint": "^1.17",
+        "phpstan/phpstan": "^2.2",
+        "phpunit/phpunit": "^9.0",
+        "szepeviktor/phpstan-wordpress": "^2.0",
+        "wp-phpunit/wp-phpunit": "^7.0",
+        "yoast/phpunit-polyfills": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "GeneroWP\\Monitoring\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "GeneroWP\\Monitoring\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "lint": "pint --test",
+        "lint:fix": "pint",
+        "test": "phpunit",
+        "test:wp-env": "npx wp-env run tests-cli --env-cwd=wp-content/plugins/gds-monitoring php -d memory_limit=1024M vendor/bin/phpunit",
+        "stan": "./vendor/bin/phpstan analyse --memory-limit=1G"
+    },
+    "config": {
+        "sort-packages": true
+    }
+}
