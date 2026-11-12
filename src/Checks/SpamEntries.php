@@ -34,8 +34,9 @@ final class SpamEntries implements Check
             $spam = ['filter' => 'CleanTalk', 'reason' => wp_strip_all_tags((string) ($GLOBALS['ct_gform_response'] ?? ''))];
         }
 
-        $reason = Log::clean((string) ($spam['reason'] ?? ''), PHP_INT_MAX);
-        if ($this->isBot($reason)) {
+        // Matched as written, masked only for the log.
+        $reason = (string) ($spam['reason'] ?? '');
+        if ($this->isBot(trim((string) preg_replace('/\s+/', ' ', $reason)))) {
             return;
         }
 
@@ -45,7 +46,7 @@ final class SpamEntries implements Check
             $formId,
             (int) $entry['id'],
             (string) ($spam['filter'] ?? 'unknown'),
-            mb_substr($reason ?: 'no reason recorded', 0, 100)
+            Log::clean($reason) ?: 'no reason recorded'
         ));
     }
 

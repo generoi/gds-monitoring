@@ -83,6 +83,31 @@ class FormSilenceTest extends TestCase
         $this->assertStringContainsString("form {$formId}:", $this->lines[0]);
     }
 
+    /**
+     * On a network site where Gravity Forms is off, its tables don't exist:
+     * no query may touch them, or each one is a database error in the log.
+     */
+    public function test_a_site_without_gravity_forms_active_is_not_queried(): void
+    {
+        $now = time();
+        $formId = $this->form();
+        $this->history($formId, $now, 20, 2 * HOUR_IN_SECONDS, 3 * DAY_IN_SECONDS);
+        update_option('active_plugins', []);
+        $queries = [];
+        add_filter('query', function (string $query) use (&$queries): string {
+            if (str_contains($query, 'gf_')) {
+                $queries[] = $query;
+            }
+
+            return $query;
+        });
+
+        (new FormSilence)->run($now);
+
+        $this->assertSame([], $queries);
+        $this->assertSame([], $this->lines);
+    }
+
     public function test_a_lasting_silence_is_logged_twice_a_day(): void
     {
         $now = time();

@@ -22,15 +22,13 @@ final class FormRefusals implements Check
      */
     private const NOT_LOGGED = [104, 400, 401];
 
-    private int $buffer = 0;
+    private string $reply = '';
 
     public function register(): void
     {
         add_filter('gform_validation', [$this, 'validated'], 999);
-        // Before Gravity Forms answers the upload on wp (10), read before
-        // WordPress flushes the buffers on shutdown (1).
+        // Before Gravity Forms answers the upload on wp (10).
         add_action('wp', [$this, 'startUpload'], 0);
-        add_action('shutdown', [$this, 'shutdown'], 0);
     }
 
     /**
@@ -65,18 +63,26 @@ final class FormRefusals implements Check
      */
     public function startUpload(): void
     {
-        if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && class_exists('GFCommon')
-            && ($_GET['gf_page'] ?? '') === \GFCommon::get_upload_page_slug()) { // phpcs:ignore WordPress.Security.NonceVerification
-            ob_start();
-            $this->buffer = ob_get_level();
+        $page = (string) ($_GET['gf_page'] ?? ''); // phpcs:ignore WordPress.Security.NonceVerification
+        // gf_page first: looking the slug up creates it on a site without one.
+        if ($page !== '' && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && class_exists('GFCommon')
+            && $page === \GFCommon::get_upload_page_slug()) {
+            ob_start([$this, 'buffered']);
         }
     }
 
-    public function shutdown(): void
+    /**
+     * The upload reply as PHP flushes it, whatever buffers came after ours;
+     * passed on unchanged.
+     */
+    public function buffered(string $output, int $phase): string
     {
-        if ($this->buffer && ob_get_level() === $this->buffer) {
-            $this->uploadAnswered((string) ob_get_contents(), $_REQUEST); // phpcs:ignore WordPress.Security.NonceVerification
+        $this->reply .= $output;
+        if ($phase & PHP_OUTPUT_HANDLER_FINAL) {
+            $this->uploadAnswered($this->reply, $_REQUEST); // phpcs:ignore WordPress.Security.NonceVerification
         }
+
+        return $output;
     }
 
     /**

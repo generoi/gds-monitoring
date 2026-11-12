@@ -19,6 +19,10 @@ abstract class TestCase extends WP_UnitTestCase
         parent::set_up();
         $this->lines = [];
         delete_option(Throttle::OPTION);
+        // Gravity Forms active on the site, as the hourly checks require. The
+        // test add-on lives outside the plugins folder, so it counts as
+        // loaded everywhere.
+        update_option('active_plugins', [plugin_basename(\GFCommon::get_base_path().'/gravityforms.php')]);
         add_filter('gds/monitoring/write', function (bool $write, string $line): bool {
             $this->lines[] = $line;
 

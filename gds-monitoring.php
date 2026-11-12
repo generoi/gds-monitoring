@@ -4,7 +4,7 @@
 Plugin Name:  GDS Monitoring
 Plugin URI:   https://github.com/generoi/gds-monitoring
 Description:  Logs what a person should look at (lost form submissions, failed feeds and emails, silent forms) for monitoring to pick up
-Version:      0.1.0
+Version:      1.1.1
 Author:       Genero
 Author URI:   https://genero.fi/
 License:      MIT

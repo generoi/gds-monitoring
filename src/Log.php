@@ -25,11 +25,19 @@ final class Log
 
     /**
      * A message from a plugin or mail server, on one line, cut short, with
-     * email addresses masked: it can echo what was submitted.
+     * what can echo a submission masked: email addresses, double-quoted
+     * values (a CRM quoting a field's value) and numbers of 7 or more digits
+     * (phone numbers). Short codes such as SMTP's "550 5.1.1" stay.
      */
     public static function clean(string $message, int $max = 100): string
     {
-        $message = (string) preg_replace(['/\S+@\S+/', '/\s+/'], ['<email>', ' '], $message);
+        $message = (string) preg_replace(['/\S+@\S+/', '/"[^"]*"|\x{201C}[^\x{201D}]*\x{201D}/u'], ['<email>', '"<value>"'], $message);
+        $message = (string) preg_replace_callback(
+            '/\+?\d[\d\s().\/-]{4,}\d/',
+            fn (array $m): string => preg_match_all('/\d/', $m[0]) >= 7 ? '<number>' : $m[0],
+            $message
+        );
+        $message = (string) preg_replace('/\s+/', ' ', $message);
 
         return mb_substr(trim($message), 0, $max);
     }

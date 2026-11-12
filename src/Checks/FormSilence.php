@@ -3,6 +3,7 @@
 namespace GeneroWP\Monitoring\Checks;
 
 use GeneroWP\Monitoring\Log;
+use GeneroWP\Monitoring\Site;
 use GeneroWP\Monitoring\Throttle;
 
 /**
@@ -27,7 +28,7 @@ final class FormSilence implements Scheduled
 
     public function run(int $now): void
     {
-        if (! class_exists('GFAPI') || ! class_exists('GFFormsModel')) {
+        if (! class_exists('GFAPI') || ! class_exists('GFFormsModel') || ! Site::gravityForms()) {
             return;
         }
 

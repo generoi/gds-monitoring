@@ -3,6 +3,7 @@
 namespace GeneroWP\Monitoring\Checks;
 
 use GeneroWP\Monitoring\Log;
+use GeneroWP\Monitoring\Site;
 use GeneroWP\Monitoring\Throttle;
 
 /**
@@ -11,12 +12,47 @@ use GeneroWP\Monitoring\Throttle;
  * record an error. Entries 1 to 24 hours old, so a feed processed in the
  * background has had its time; a conditional feed counts only entries that
  * meet its condition, as its add-on judges it.
+ *
+ * Not counted: entries from before the feed was first seen active (Gravity
+ * Forms keeps no date for a feed), and entries restored from spam, which
+ * Gravity Forms doesn't run feeds for.
  */
-final class FeedsNotRun implements Scheduled
+final class FeedsNotRun implements Check, Scheduled
 {
     public const GRACE = HOUR_IN_SECONDS;
 
     public const WINDOW = DAY_IN_SECONDS;
+
+    /** Per site: when each active feed was first seen active. */
+    public const SEEN = 'gds_monitoring_feeds_seen';
+
+    public const RESTORED = 'gds_monitoring_restored';
+
+    public function register(): void
+    {
+        add_action('gform_update_status', [$this, 'statusChanged'], 10, 3);
+    }
+
+    /**
+     * @param  int|string  $entryId
+     * @param  mixed  $status
+     * @param  mixed  $previous
+     */
+    public function statusChanged($entryId, $status, $previous): void
+    {
+        if ($previous === 'spam' && $status === 'active') {
+            gform_update_meta((int) $entryId, self::RESTORED, 1);
+        }
+    }
+
+    /**
+     * Restored here, or by Gravity Forms' own "not spam", which keeps the
+     * status it came from.
+     */
+    private function restored(int $entryId): bool
+    {
+        return (bool) gform_get_meta($entryId, self::RESTORED) || gform_get_meta($entryId, 'previous_status') === 'spam';
+    }
 
     public function perSite(): bool
     {
@@ -25,7 +61,7 @@ final class FeedsNotRun implements Scheduled
 
     public function run(int $now): void
     {
-        if (! class_exists('GFAPI') || ! class_exists('GFAddOn')) {
+        if (! class_exists('GFAPI') || ! class_exists('GFAddOn') || ! Site::gravityForms()) {
             return;
         }
 
@@ -34,14 +70,25 @@ final class FeedsNotRun implements Scheduled
             return; // none: a WP_Error
         }
 
+        // Feeds no longer active are forgotten: switched on again, they start over.
+        $known = get_option(self::SEEN, []);
+        $known = is_array($known) ? $known : [];
+        $seen = [];
+        foreach ($feeds as $feed) {
+            $seen[(int) $feed['id']] = (int) ($known[(int) $feed['id']] ?? $now);
+        }
+        if ($seen !== $known) {
+            update_option(self::SEEN, $seen, false);
+        }
+
         foreach ($feeds as $feed) {
             $addon = \GFAddOn::get_addon_by_slug((string) $feed['addon_slug']);
             $form = \GFAPI::get_form((int) $feed['form_id']);
-            if (! $addon instanceof \GFFeedAddOn || ! is_array($form) || empty($form['is_active'])) {
+            if (! $addon instanceof \GFFeedAddOn || ! Site::active($addon->get_path()) || ! is_array($form) || empty($form['is_active'])) {
                 continue;
             }
 
-            [$missed, $due] = $this->missed($feed, $form, $addon, $now);
+            [$missed, $due] = $this->missed($feed, $form, $addon, $now, $seen[(int) $feed['id']]);
             if ($missed > 0 && Throttle::allow('feed-'.$feed['id'], 12 * HOUR_IN_SECONDS, $now)) {
                 Log::write(sprintf(
                     'gform feed not run blog %d form %d feed %d (%s): %d of %d entries in the last 24 h',
@@ -64,7 +111,7 @@ final class FeedsNotRun implements Scheduled
      * @param  array<string,mixed>  $form
      * @return array{int,int}
      */
-    private function missed(array $feed, array $form, \GFFeedAddOn $addon, int $now): array
+    private function missed(array $feed, array $form, \GFFeedAddOn $addon, int $now, int $since): array
     {
         // A day's margin on the date filter, which Gravity Forms reads in the
         // site's time zone; the window itself is cut from date_created (UTC).
@@ -80,8 +127,11 @@ final class FeedsNotRun implements Scheduled
 
         $missed = $due = 0;
         foreach ($entries as $entry) {
-            $age = $now - (int) strtotime($entry['date_created'].' UTC');
-            if ($age < self::GRACE || $age > self::WINDOW || ! $addon->is_feed_condition_met($feed, $form, $entry)) {
+            $created = (int) strtotime($entry['date_created'].' UTC');
+            $age = $now - $created;
+            if ($age < self::GRACE || $age > self::WINDOW || $created < $since
+                || $this->restored((int) $entry['id'])
+                || ! $addon->is_feed_condition_met($feed, $form, $entry)) {
                 continue;
             }
             $due++;

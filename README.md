@@ -3,8 +3,9 @@
 A must-use plugin that writes one line to the PHP error log for each thing a
 person should look at, prefixed `gds-monitoring:`. Monitoring that reads the
 log (foreman's Kinsta watcher) turns each kind of line into a card. Lines hold
-ids, counts and the plugins' own messages, with email addresses masked; never
-what a visitor typed.
+ids, counts and the plugins' own messages, cut at 100 characters. A message
+can echo what a visitor typed, so email addresses, double-quoted values and
+numbers of 7 or more digits are masked; anything else in it isn't.
 
 ```sh
 composer require generoi/gds-monitoring
@@ -25,11 +26,18 @@ Each is a class in `src/Checks/`.
 | `Heartbeat` | Once a day, so a site that stopped logging can be told from a quiet one | `heartbeat` |
 
 The hourly checks run from the main site's cron and visit every site of a
-network. A condition that lasts logs at most twice a day.
+network where Gravity Forms is active, counting only feeds whose add-on is
+active there. Gravity Forms has to be active on the main site too, for its
+code to be loaded. A condition that lasts logs at most twice a day.
 
-Not covered: feeds that wait on purpose (until a payment completes) count as
-not run; a finished campaign form left active is reported silent until it has
-fewer than 10 entries in 90 days.
+`FeedsNotRun` leaves out entries from before it first saw a feed active
+(Gravity Forms keeps no date for a feed, so a new or re-enabled feed starts
+with its next entry), and entries restored from spam, which Gravity Forms
+doesn't run feeds for.
+
+Not covered: a feed that waits on purpose (until a payment completes) counts
+as not run; a finished campaign form left active is reported silent until it
+has fewer than 10 entries in 90 days.
 
 ## Development
 
