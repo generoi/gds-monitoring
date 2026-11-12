@@ -30,7 +30,7 @@ final class StaleForms implements Check
         $form = $result['form'] ?? [];
         $failed = [];
         foreach ($form['fields'] ?? [] as $field) {
-            if (is_object($field) && $this->failedState($field, (int) ($form['id'] ?? 0))) {
+            if (is_object($field) && $this->failedState($field)) {
                 $failed[] = (int) $field->id;
             }
         }
@@ -76,17 +76,11 @@ final class StaleForms implements Check
     }
 
     /**
-     * 3.x marks the field; 2.x has only its check, deprecated in 3.0.
+     * Gravity Forms 2.x and 3.x both mark the field.
      */
-    private function failedState(object $field, int $formId): bool
+    private function failedState(object $field): bool
     {
-        if (empty($field->failed_validation)) {
-            return false;
-        }
-        if (method_exists($field, 'is_state_valid')) {
-            return method_exists($field, 'get_context_property') && (bool) $field->get_context_property('failed_state_validation');
-        }
-
-        return class_exists('GFFormDisplay') && \GFFormDisplay::failed_state_validation($formId, $field, \GFFormsModel::get_field_value($field));
+        return ! empty($field->failed_validation) && method_exists($field, 'get_context_property')
+            && (bool) $field->get_context_property('failed_state_validation');
     }
 }
