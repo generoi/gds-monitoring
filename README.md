@@ -32,8 +32,8 @@ code to be loaded. A condition that lasts logs at most twice a day.
 
 `FeedsNotRun` leaves out entries from before it first saw a feed active
 (Gravity Forms keeps no date for a feed, so a new or re-enabled feed starts
-with its next entry), and entries restored from spam, which Gravity Forms
-doesn't run feeds for.
+with its next entry). An entry marked not spam is counted: Gravity Forms runs
+its feeds then.
 
 Not covered: a feed that waits on purpose (until a payment completes) counts
 as not run; a finished campaign form left active is reported silent until it

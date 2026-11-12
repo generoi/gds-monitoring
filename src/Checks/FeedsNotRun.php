@@ -14,10 +14,10 @@ use GeneroWP\Monitoring\Throttle;
  * meet its condition, as its add-on judges it.
  *
  * Not counted: entries from before the feed was first seen active (Gravity
- * Forms keeps no date for a feed), and entries restored from spam, which
- * Gravity Forms doesn't run feeds for.
+ * Forms keeps no date for a feed). An entry restored from spam is counted:
+ * Gravity Forms runs its feeds when it's marked not spam.
  */
-final class FeedsNotRun implements Check, Scheduled
+final class FeedsNotRun implements Scheduled
 {
     public const GRACE = HOUR_IN_SECONDS;
 
@@ -25,34 +25,6 @@ final class FeedsNotRun implements Check, Scheduled
 
     /** Per site: when each active feed was first seen active. */
     public const SEEN = 'gds_monitoring_feeds_seen';
-
-    public const RESTORED = 'gds_monitoring_restored';
-
-    public function register(): void
-    {
-        add_action('gform_update_status', [$this, 'statusChanged'], 10, 3);
-    }
-
-    /**
-     * @param  int|string  $entryId
-     * @param  mixed  $status
-     * @param  mixed  $previous
-     */
-    public function statusChanged($entryId, $status, $previous): void
-    {
-        if ($previous === 'spam' && $status === 'active') {
-            gform_update_meta((int) $entryId, self::RESTORED, 1);
-        }
-    }
-
-    /**
-     * Restored here, or by Gravity Forms' own "not spam", which keeps the
-     * status it came from.
-     */
-    private function restored(int $entryId): bool
-    {
-        return (bool) gform_get_meta($entryId, self::RESTORED) || gform_get_meta($entryId, 'previous_status') === 'spam';
-    }
 
     public function perSite(): bool
     {
@@ -67,7 +39,10 @@ final class FeedsNotRun implements Check, Scheduled
 
         $feeds = \GFAPI::get_feeds(null, null, null, true);
         if (! is_array($feeds)) {
-            return; // none: a WP_Error
+            // None active (a WP_Error): one switched on later starts over.
+            delete_option(self::SEEN);
+
+            return;
         }
 
         // Feeds no longer active are forgotten: switched on again, they start over.
@@ -130,7 +105,6 @@ final class FeedsNotRun implements Check, Scheduled
             $created = (int) strtotime($entry['date_created'].' UTC');
             $age = $now - $created;
             if ($age < self::GRACE || $age > self::WINDOW || $created < $since
-                || $this->restored((int) $entry['id'])
                 || ! $addon->is_feed_condition_met($feed, $form, $entry)) {
                 continue;
             }

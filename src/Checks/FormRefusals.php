@@ -77,7 +77,8 @@ final class FormRefusals implements Check
      */
     public function buffered(string $output, int $phase): string
     {
-        $this->reply .= $output;
+        // Output thrown away (ob_clean) was never the reply.
+        $this->reply = ($phase & PHP_OUTPUT_HANDLER_CLEAN ? '' : $this->reply.$output);
         if ($phase & PHP_OUTPUT_HANDLER_FINAL) {
             $this->uploadAnswered($this->reply, $_REQUEST); // phpcs:ignore WordPress.Security.NonceVerification
         }

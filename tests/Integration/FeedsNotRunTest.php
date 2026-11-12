@@ -110,22 +110,37 @@ class FeedsNotRunTest extends TestCase
         $this->assertStringEndsWith('1 of 1 entries in the last 24 h', $this->lines[0]);
     }
 
+    public function test_a_site_whose_last_feed_is_switched_off_forgets_it(): void
+    {
+        $feedId = $this->feed($this->form());
+        \GFAPI::update_feed_property($feedId, 'is_active', 0);
+
+        (new FeedsNotRun)->run(time());
+
+        $this->assertFalse(get_option(FeedsNotRun::SEEN));
+    }
+
     /**
-     * Gravity Forms doesn't run feeds for an entry marked not spam.
+     * Gravity Forms runs an entry's feeds when it's marked not spam; one
+     * that then didn't run is owed like any other.
      */
-    public function test_an_entry_restored_from_spam_is_not_owed(): void
+    public function test_an_entry_restored_from_spam_is_owed_its_feeds(): void
     {
         $now = time();
         $formId = $this->form();
-        $this->feed($formId);
+        $feedId = $this->feed($formId);
         $restored = $this->entry($formId, $now - 3 * HOUR_IN_SECONDS, 'spam');
-        \GFAPI::update_entry_property($restored, 'status', 'active');
-        $notSpam = $this->entry($formId, $now - 4 * HOUR_IN_SECONDS, 'spam');
-        \GFFormsModel::change_entry_status($notSpam, 'active');
+        \GFFormsModel::change_entry_status($restored, 'active');
+
+        $processed = gform_get_meta($restored, 'processed_feeds');
+        $this->assertSame([$feedId], array_map('intval', (array) ($processed['gdstestfeed'] ?? [])));
 
         (new FeedsNotRun)->run($now);
-
         $this->assertSame([], $this->lines);
+
+        gform_delete_meta($restored, 'processed_feeds');
+        (new FeedsNotRun)->run($now);
+        $this->assertCount(1, $this->lines);
     }
 
     /**
