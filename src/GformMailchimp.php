@@ -11,6 +11,18 @@ namespace GeneroWP\Monitoring;
  */
 final class GformMailchimp
 {
+    /**
+     * Mailchimp's details when it refuses the address itself. Anything else
+     * ("Your merge fields were invalid.", an account problem) is logged.
+     */
+    private const ADDRESS_REFUSALS = [
+        'looks fake or invalid',
+        'is already a list member',
+        'permanently deleted',
+        'compliance state',
+        'valid email address',
+    ];
+
     /** Mailchimp's detail on the request that just failed. */
     private ?string $detail = null;
 
@@ -25,7 +37,14 @@ final class GformMailchimp
      */
     public function httpResponse($response, string $context, string $class, array $args, string $url): void
     {
-        if ($context !== 'response' || ! is_array($response) || ! preg_match('#^https://[a-z0-9]+\.api\.mailchimp\.com/#', $url)) {
+        if ($context !== 'response' || ! preg_match('#^https://[a-z0-9]+\.api\.mailchimp\.com/#', $url)) {
+            return;
+        }
+
+        // Any response replaces the last one, a failed connection included,
+        // so an earlier refusal can't stand in for it.
+        $this->detail = null;
+        if (! is_array($response)) {
             return;
         }
 
@@ -37,16 +56,23 @@ final class GformMailchimp
     }
 
     /**
-     * Whether the last request was refused for the address the visitor typed
-     * (fake-looking, already a member, deleted, in a compliance state), which
-     * Mailchimp names in its detail, unlike a wrong request ("Your merge
-     * fields were invalid."). Asked once per failure, so it's forgotten.
+     * Whether the last request was refused for the address the visitor typed.
+     * Asked once per failure, so it's forgotten.
      */
     public function refusedVisitorsAddress(): bool
     {
         $detail = $this->detail;
         $this->detail = null;
+        if ($detail === null) {
+            return false;
+        }
 
-        return $detail !== null && (bool) preg_match('/\S+@\S+|valid email address/i', $detail);
+        foreach (self::ADDRESS_REFUSALS as $phrase) {
+            if (stripos($detail, $phrase) !== false) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
