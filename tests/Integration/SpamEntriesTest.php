@@ -53,6 +53,7 @@ class SpamEntriesTest extends TestCase
             'no version_hash' => ['Honeypot Spam Filter', 'The version_hash was not included in the submission.'],
             'speed check' => ['Honeypot Spam Filter', '1 of 3 submissions met the speed check threshold (500 ms). Min required: 2. All speeds (ms): 120, 90, 800.'],
             'reCAPTCHA low score' => ['reCAPTCHA', 'Score of 0.1 is less than or equal to the threshold of 0.5.'],
+            'ALTCHA rate limit' => ['ALTCHA', 'The submission rate limit for this IP address was exceeded.'],
         ];
     }
 
@@ -64,6 +65,13 @@ class SpamEntriesTest extends TestCase
         $this->submitAsSpam($filter, $reason);
 
         $this->assertSame([], $this->lines);
+    }
+
+    public function test_altcha_content_filter_is_logged(): void
+    {
+        $this->submitAsSpam('ALTCHA', 'The content filter matched: keyword.');
+
+        $this->assertStringEndsWith('(ALTCHA): The content filter matched: keyword.', $this->lines[0] ?? '');
     }
 
     public function test_spam_without_a_reason_says_so(): void

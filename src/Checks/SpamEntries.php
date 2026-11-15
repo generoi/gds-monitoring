@@ -64,6 +64,7 @@ final class SpamEntries implements Check
             __('%1$d of %2$d submissions met the speed check threshold (%3$d ms). Min required: %4$d. All speeds (ms): %5$s.', 'gravityforms'),
             __('Suspicious activity detected: multiple submissions from the same IP address and User-Agent, all at the same submission speed.', 'gravityforms'),
             __('Score of %1$s is less than or equal to the threshold of %2$s.', 'gravityformsrecaptcha'),
+            __('The submission rate limit for this IP address was exceeded.', 'gravityforms-altcha'),
         ];
     }
 

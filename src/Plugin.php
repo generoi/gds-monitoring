@@ -2,6 +2,7 @@
 
 namespace GeneroWP\Monitoring;
 
+use GeneroWP\Monitoring\Checks\AltchaRejections;
 use GeneroWP\Monitoring\Checks\Check;
 use GeneroWP\Monitoring\Checks\EntryErrorNotes;
 use GeneroWP\Monitoring\Checks\FeedsNotRun;
@@ -25,6 +26,7 @@ final class Plugin
             new SpamEntries,
             new EntryErrorNotes,
             new FormRefusals,
+            new AltchaRejections,
             new MailFailures,
             new FeedsNotRun,
             new FormSilence,
