@@ -27,10 +27,12 @@ Each is a class in `src/Checks/`.
 | `Heartbeat` | Once a day, so a site that stopped logging can be told from a quiet one | `heartbeat` |
 
 A line written during cron or WP-CLI is queued (the latest 200, network-wide)
-and written by the next ordinary request: `wp-cron.php` ends the web request
-before WordPress loads, so the web server no longer takes its error log, and
-a crontab's WP-CLI usually discards stderr. Monitoring sees such a line when
-it's written, not when the check ran.
+and written at the start (`init`) of the next ordinary request: `wp-cron.php`
+ends the web request before WordPress loads, so the web server no longer takes
+its error log, and a crontab's WP-CLI usually discards stderr. Not at the
+request's end, when a client that left or a response finished early would take
+the lines with it. Monitoring sees such a line when it's written, not when the
+check ran.
 
 The hourly checks run from the main site's cron and visit every site of a
 network where Gravity Forms is active, counting only feeds whose add-on is
