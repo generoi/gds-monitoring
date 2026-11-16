@@ -55,7 +55,7 @@ final class Plugin
         self::$schedule = new Schedule($scheduled);
         self::$schedule->register();
 
-        add_action('shutdown', [Log::class, 'flush']);
+        add_action('init', [Log::class, 'flush'], 0);
     }
 
     public static function schedule(): Schedule

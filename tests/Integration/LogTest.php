@@ -72,6 +72,16 @@ class LogTest extends TestCase
         $this->assertFalse(get_site_option(Log::QUEUE));
     }
 
+    /**
+     * At shutdown the client may be gone, or the response finished early,
+     * and lines written then never reach the web server's log.
+     */
+    public function test_the_queue_is_written_at_the_start_of_a_request(): void
+    {
+        $this->assertSame(0, has_action('init', [Log::class, 'flush']));
+        $this->assertFalse(has_action('shutdown', [Log::class, 'flush']));
+    }
+
     public function test_the_queue_keeps_the_latest_lines(): void
     {
         $this->logFile();

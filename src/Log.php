@@ -40,8 +40,10 @@ final class Log
     }
 
     /**
-     * Writes the queued lines, at the end of an ordinary request: its error
-     * log is the web server's, where monitoring reads.
+     * Writes the queued lines, at the start of an ordinary request: its error
+     * log is the web server's, where monitoring reads. Not at its end: by
+     * then the client may have gone, or the response been finished early
+     * (fastcgi_finish_request()), and the web server no longer takes stderr.
      */
     public static function flush(): void
     {
