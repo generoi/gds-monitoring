@@ -50,6 +50,8 @@ final class Plugin
             }
         }
 
+        (new TestSubmissions)->register();
+
         self::$schedule = new Schedule($scheduled);
         self::$schedule->register();
 
