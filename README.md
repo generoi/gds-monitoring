@@ -44,7 +44,13 @@ its feeds then.
 
 Not covered: a feed that waits on purpose (until a payment completes) counts
 as not run; a finished campaign form left active is reported silent until it
-has fewer than 10 entries in 90 days.
+has fewer than 10 entries in 90 days. To skip such a form sooner, return true
+from `gds/monitoring/form_silence/ignore` (arguments: the current value, the
+form ID, the blog ID):
+
+```php
+add_filter('gds/monitoring/form_silence/ignore', fn ($ignore, $formId) => $formId === 12 ? true : $ignore, 10, 2);
+```
 
 ## Development
 

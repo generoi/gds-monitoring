@@ -33,6 +33,10 @@ final class FormSilence implements Scheduled
         }
 
         foreach (\GFAPI::get_forms(true, false) as $form) {
+            if (apply_filters('gds/monitoring/form_silence/ignore', false, (int) $form['id'], get_current_blog_id())) {
+                continue;
+            }
+
             $silence = $this->silence((int) $form['id'], $now);
             if ($silence && Throttle::allow('silent-'.$form['id'], 12 * HOUR_IN_SECONDS, $now)) {
                 Log::write(sprintf(

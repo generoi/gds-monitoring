@@ -108,6 +108,25 @@ class FormSilenceTest extends TestCase
         $this->assertSame([], $this->lines);
     }
 
+    /**
+     * A form that is dormant on purpose (a finished campaign) can be ignored
+     * from the site's own code, and only that form.
+     */
+    public function test_a_form_ignored_by_the_filter_is_not_logged(): void
+    {
+        $now = time();
+        $formId = $this->form();
+        $other = $this->form();
+        $this->history($formId, $now, 20, 2 * HOUR_IN_SECONDS, 3 * DAY_IN_SECONDS);
+        $this->history($other, $now, 20, 2 * HOUR_IN_SECONDS, 3 * DAY_IN_SECONDS);
+        add_filter('gds/monitoring/form_silence/ignore', fn ($ignore, $id) => $id === $formId ? true : $ignore, 10, 2);
+
+        (new FormSilence)->run($now);
+
+        $this->assertCount(1, $this->lines);
+        $this->assertStringContainsString("form {$other}:", $this->lines[0]);
+    }
+
     public function test_a_lasting_silence_is_logged_twice_a_day(): void
     {
         $now = time();
