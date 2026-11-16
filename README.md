@@ -46,6 +46,32 @@ Not covered: a feed that waits on purpose (until a payment completes) counts
 as not run; a finished campaign form left active is reported silent until it
 has fewer than 10 entries in 90 days.
 
+## Test submissions
+
+To check on the live site that a form works, without the client hearing of
+it, submit it with the test address in its email field:
+
+```php
+// config/application.php, or the gds/monitoring/test_email filter
+Config::define('GDS_MONITORING_TEST_EMAIL', env('GDS_MONITORING_TEST_EMAIL'));
+```
+
+The address itself or with a `+tag` (`forms-test+contact@example.com`)
+counts, whatever its case. The submission goes the whole real way (the page,
+its scripts, the spam checks, saving, mail), but:
+
+- every notification goes to the address typed, its subject marked `[test]`,
+  instead of its recipients (the site's staff, the visitor, CC and BCC);
+- no add-on feed runs (Mailchimp, a CRM, a webhook, a payment);
+- once handled, the entry gets a note and goes to the trash, so exports and
+  the site's lists never show it and `FormSilence` doesn't count it. One
+  caught as spam stays spam, so the test shows what the spam checks made of
+  it.
+
+A form needs an email field for this, and the address a real domain:
+Gravity Forms refuses `@example.com` and `@domain.com` (2.9.15 on). What another plugin does on
+`gform_after_submission` itself, outside Gravity Forms' feeds, still runs.
+
 ## Development
 
 ```sh
