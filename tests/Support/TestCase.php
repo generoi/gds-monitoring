@@ -2,6 +2,7 @@
 
 namespace GeneroWP\Monitoring\Tests\Support;
 
+use GeneroWP\Monitoring\Checks\FormSilence;
 use GeneroWP\Monitoring\Throttle;
 use WP_UnitTestCase;
 
@@ -19,6 +20,7 @@ abstract class TestCase extends WP_UnitTestCase
         parent::set_up();
         $this->lines = [];
         delete_option(Throttle::OPTION);
+        delete_transient(FormSilence::PLACED);
         // Gravity Forms active on the site, as the hourly checks require. The
         // test add-on lives outside the plugins folder, so it counts as
         // loaded everywhere.

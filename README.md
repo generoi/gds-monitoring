@@ -23,7 +23,7 @@ Each is a class in `src/Checks/`.
 | `AltchaRejections` | A submission [ALTCHA](https://github.com/generoi/gravityforms-altcha) refused, which leaves no entry, when the proof had expired or its signature no longer matches (the key changed). Both take a real, signed challenge, so they point to real people. Missing, malformed or replayed proofs, which bots send, are skipped | `gform altcha rejected blog 2 form 4 (expired): 125 s past expiry` |
 | `MailFailures` | `wp_mail_failed`, from any plugin | `wp_mail failed blog 2: SMTP Error: The following recipients failed: <email> …` |
 | `FeedsNotRun` | Hourly: an active feed with no run recorded for entries 1–24 h old that meet its condition | `gform feed not run blog 2 form 4 feed 1 (gravityformsmailchimp): 4 of 9 entries in the last 24 h` |
-| `FormSilence` | Hourly: an active form with 10+ entries in 90 days quiet for 1.5× its longest gap in them, and at least a day | `gform silent blog 2 form 4: no entry for 40 h, longest gap in 90 days 15 h` |
+| `FormSilence` | Hourly: an active form placed on the site, with 10+ entries in 90 days, quiet for 1.5× its longest gap in them, and at least a day | `gform silent blog 2 form 4: no entry for 40 h, longest gap in 90 days 15 h` |
 | `Heartbeat` | Once a day, so a site that stopped logging can be told from a quiet one | `heartbeat` |
 
 A line written during cron or WP-CLI is queued (the latest 200, network-wide)
@@ -45,8 +45,13 @@ with its next entry). An entry marked not spam is counted: Gravity Forms runs
 its feeds then.
 
 Not covered: a feed that waits on purpose (until a payment completes) counts
-as not run; a finished campaign form left active is reported silent until it
-has fewer than 10 entries in 90 days.
+as not run; a finished campaign form left active and still on a published page
+is reported silent until it has fewer than 10 entries in 90 days.
+
+A form counts as placed when a published post's content embeds it (block or
+shortcode), a published post uses a synced pattern holding it, a block widget
+holds it, or it was viewed in the last 30 days. The last catches a form placed
+in theme code, unless every page showing it is served from cache.
 
 ## Test submissions
 
