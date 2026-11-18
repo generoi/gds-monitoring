@@ -13,4 +13,21 @@ class MailFailuresTest extends TestCase
 
         $this->assertSame(['gds-monitoring: report wp_mail blog 1: failed: SMTP Error: The following recipients failed: <email> Mailbox unavailable'], $this->lines);
     }
+
+    public function test_a_postmark_api_refusal_is_logged(): void
+    {
+        do_action('postmark_error', [
+            'response' => ['code' => 422, 'message' => 'Unprocessable Entity'],
+            'body' => '{"ErrorCode":406,"Message":"You tried to send to recipient(s) that have been marked as inactive."}',
+        ], []);
+
+        $this->assertSame(['gds-monitoring: report wp_mail blog 1: failed: Postmark API 422: You tried to send to recipient(s) that have been marked as inactive.'], $this->lines);
+    }
+
+    public function test_a_postmark_connection_error_is_logged(): void
+    {
+        do_action('postmark_error', new WP_Error('http_request_failed', 'cURL error 28: Operation timed out'), []);
+
+        $this->assertSame(['gds-monitoring: report wp_mail blog 1: failed: Postmark cURL error 28: Operation timed out'], $this->lines);
+    }
 }
