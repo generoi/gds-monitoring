@@ -24,6 +24,7 @@ Each is a class in `src/Checks/`.
 | `MailFailures` | `wp_mail_failed`, from any plugin | `wp_mail failed blog 2: SMTP Error: The following recipients failed: <email> …` |
 | `FeedsNotRun` | Hourly: an active feed with no run recorded for entries 1–24 h old that meet its condition | `gform feed not run blog 2 form 4 feed 1 (gravityformsmailchimp): 4 of 9 entries in the last 24 h` |
 | `FormSilence` | Hourly: an active form placed on the site, with 10+ entries in 90 days, quiet for 1.5× its longest gap in them, and at least a day | `gform silent blog 2 form 4: no entry for 40 h, longest gap in 90 days 15 h` |
+| `PlmSync` | An error or warning wp-plm's beCPG import logs (first one per 12 h), and hourly, a type (`products`, `recipes`) whose full sync last completed over 26 h ago (`gds/monitoring/plm_stale_after`). Only where wp-plm has recorded a completed sync | `plm error blog 1: Failed to sync recipe: cURL error 28: …` / `plm stale blog 1 recipes: last complete sync 30 h ago` |
 | `Heartbeat` | Once a day, so a site that stopped logging can be told from a quiet one | `heartbeat` |
 
 A line written during cron or WP-CLI is queued (the latest 200, network-wide)

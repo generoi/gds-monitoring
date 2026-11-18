@@ -10,6 +10,7 @@ use GeneroWP\Monitoring\Checks\FormRefusals;
 use GeneroWP\Monitoring\Checks\FormSilence;
 use GeneroWP\Monitoring\Checks\Heartbeat;
 use GeneroWP\Monitoring\Checks\MailFailures;
+use GeneroWP\Monitoring\Checks\PlmSync;
 use GeneroWP\Monitoring\Checks\Scheduled;
 use GeneroWP\Monitoring\Checks\SpamEntries;
 
@@ -30,6 +31,7 @@ final class Plugin
             new MailFailures,
             new FeedsNotRun,
             new FormSilence,
+            new PlmSync,
             new Heartbeat,
         ];
     }
