@@ -8,7 +8,8 @@ use GeneroWP\Monitoring\Log;
  * A visitor refused by Gravity Forms, which leaves no entry to see:
  *
  * - a submission with fields failing the state check, as from a page cached
- *   before the form was edited or past the state token's life;
+ *   before the form was edited or past the state token's life, unless no
+ *   script ran on the page (a bot posting its HTML);
  * - a multi-file upload refused for an expired nonce ("Your session has
  *   expired"), the file sent before the form is;
  * - a multi-file upload the server failed (too large for post_max_size, no
@@ -37,6 +38,14 @@ final class FormRefusals implements Check
      */
     public function validated(array $result): array
     {
+        // Gravity Forms' script adds version_hash to every form it submits, so
+        // without it no script ran: a bot posting the page's HTML. A browser
+        // whose scripts failed still posts the page's own values, which pass
+        // the state check, so a stale page or a broken field is still logged.
+        if (empty($_POST['version_hash'])) { // phpcs:ignore WordPress.Security.NonceVerification
+            return $result;
+        }
+
         $form = $result['form'] ?? [];
         $failed = [];
         foreach ($form['fields'] ?? [] as $field) {

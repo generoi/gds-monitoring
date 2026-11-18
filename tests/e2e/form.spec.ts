@@ -69,6 +69,27 @@ test('a submission failing the state check is logged', async ({ page }) => {
     expect(lines()).toEqual([`gds-monitoring: gform state invalid blog 1 form ${site.form} fields 2`]);
 });
 
+/**
+ * The same refusal posted straight from the page's HTML, as spam bots do: no
+ * script ran, so Gravity Forms' version_hash is missing.
+ */
+test('a scriptless submission failing the state check is not logged', async ({ page }) => {
+    site = setup('validate-state');
+    await fill(page);
+    const fields = await page.locator(`#gform_${site.form}`).evaluate((form: HTMLFormElement) => {
+        const data = Object.fromEntries(new FormData(form) as unknown as Iterable<[string, string]>);
+        delete data.version_hash;
+        return data;
+    });
+    fields.input_2 = 'medium';
+
+    const response = await page.request.post(site.page, { multipart: fields });
+
+    // Refused all the same, so a missing line means it wasn't logged.
+    expect(await response.text()).toContain('gform_validation_error');
+    expect(lines()).toEqual([]);
+});
+
 async function upload(page: Page): Promise<void> {
     await page.locator(`#gform_multifile_upload_${site.form}_3 input[type="file"]`).setInputFiles({
         name: 'note.txt', mimeType: 'text/plain', buffer: Buffer.from('hello'),
