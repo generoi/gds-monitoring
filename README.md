@@ -24,7 +24,8 @@ Each is a class in `src/Checks/`.
 | `MailFailures` | `wp_mail_failed`, from any plugin | `wp_mail failed blog 2: SMTP Error: The following recipients failed: <email> …` |
 | `FeedsNotRun` | Hourly: an active feed with no run recorded for entries 1–24 h old that meet its condition | `gform feed not run blog 2 form 4 feed 1 (gravityformsmailchimp): 4 of 9 entries in the last 24 h` |
 | `FormSilence` | Hourly: an active form placed on the site, with 10+ entries in 90 days, quiet for 1.5× its longest gap in them, and at least a day | `gform silent blog 2 form 4: no entry for 40 h, longest gap in 90 days 15 h` |
-| `PlmSync` | An error or warning wp-plm's beCPG import logs (first one per 12 h), and hourly, a type (`products`, `recipes`) whose full sync last completed over 26 h ago (`gds/monitoring/plm_stale_after`). Only where wp-plm has recorded a completed sync | `plm error blog 1: Failed to sync recipe: cURL error 28: …` / `plm stale blog 1 recipes: last complete sync 30 h ago` |
+| `Reports` | Another plugin reports a problem only it can see (see below). The first per source in 12 h | `report plm blog 1: Failed to sync recipe: cURL error 28: …` |
+| `Jobs` | Hourly: a job another plugin said it completed (see below) has gone longer than the max age it gave. Watched only once it has completed on the site | `job overdue blog 1 plm recipes: last completed 30 h ago` |
 | `Heartbeat` | Once a day, so a site that stopped logging can be told from a quiet one | `heartbeat` |
 
 A line written during cron or WP-CLI is queued (the latest 200, network-wide)
@@ -71,6 +72,21 @@ is sent:
 
 Like Gravity Forms, our script adds nothing in a browser driven by automation
 (Selenium, PhantomJS and the like), so those count as bots too.
+
+## Reporting from other plugins
+
+A plugin reports to monitoring through two actions, which do nothing when this
+plugin isn't installed, so it needs no dependency on it:
+
+```php
+// A problem only the plugin can see. Message cleaned and masked like the rest.
+do_action('gds/monitoring/report', 'plm', $message);
+
+// A recurring job completed; report it if it doesn't again within the max age.
+do_action('gds/monitoring/completed', 'plm recipes', 26 * HOUR_IN_SECONDS);
+```
+
+wp-plm (the beCPG importer) uses both.
 
 ## Test submissions
 
