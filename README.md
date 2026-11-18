@@ -22,7 +22,6 @@ Each is a class in `src/Checks/`.
 | `SpamEntries` | A Gravity Forms entry is marked as spam, except for reasons only bots give (a filled honeypot, no `version_hash`, the speed checks, identical repeat submissions, reCAPTCHA's low score, ALTCHA's rate limit). A missing `version_hash` or `gform_submission_speeds` is logged after all when [our own script](#which-script-ran) ran: a person whose page didn't run Gravity Forms' script. CleanTalk's verdict stands in for its missing reason | `report gform blog 2: spam form 4 entry 120 (Honeypot Spam Filter): The form failed state validation…` |
 | `EntryErrorNotes` | An error note on an entry: a failed feed of any add-on, a notification that couldn't be sent, a failed save. Skipped when Mailchimp refused the visitor's own address (fake-looking, already a member, deleted, in a compliance state), which its response's detail names | `report gform blog 2: gravityformsmailchimp error form 4 entry 121: Mailchimp Feed 1: Unable to add/update subscriber: Invalid Resource` |
 | `FormRefusals` | A visitor refused by Gravity Forms, which leaves no entry: fields failing the state check (a page cached before the form was edited, or past the state token's life); a multi-file upload refused for an expired nonce ("Your session has expired"); or one the server failed (too large for `post_max_size`, no temp folder, a file that couldn't be written). Refusals of the visitor's own file (type, size), malformed requests, and state failures from a bot posting the page's HTML ([no script ran](#which-script-ran)) are skipped | `report gform blog 2: state invalid form 4 fields 3,5` / `report gform blog 2: upload nonce expired form 4 field 6` / `report gform blog 2: upload failed form 4 field 6 (500): Failed to upload file.` |
-| `AltchaRejections` | A submission [ALTCHA](https://github.com/generoi/gravityforms-altcha) refused, which leaves no entry, when the proof had expired or its signature no longer matches (the key changed). Both take a real, signed challenge, so they point to real people. Missing, malformed or replayed proofs, which bots send, are skipped | `report altcha blog 2: rejected form 4 (expired): 125 s past expiry` |
 | `MailFailures` | `wp_mail_failed`, from any plugin | `report wp_mail blog 2: failed: SMTP Error: The following recipients failed: <email> …` |
 | `FeedsNotRun` | Hourly: an active feed with no run recorded for entries 1–24 h old that meet its condition | `report gform blog 2: feed not run form 4 feed 1 (gravityformsmailchimp): 4 of 9 entries in the last 24 h` |
 | `FormSilence` | Hourly: an active form placed on the site, with 10+ entries in 90 days, quiet for 1.5× its longest gap in them, and at least a day | `report gform blog 2: silent form 4: no entry for 40 h, longest gap in 90 days 15 h` |
@@ -88,7 +87,12 @@ do_action('gds/monitoring/report', 'plm', $message);
 do_action('gds/monitoring/completed', 'plm recipes', 26 * HOUR_IN_SECONDS);
 ```
 
-wp-plm (the beCPG importer) uses both.
+A third argument to `report` names another throttle key, or `false` logs every
+one.
+
+wp-plm (the beCPG importer) uses both. gravityforms-altcha reports each
+rejection that turned a real visitor away (an expired proof, or one signed with
+a changed key), unthrottled.
 
 ## Test submissions
 
