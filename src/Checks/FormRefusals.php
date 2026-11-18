@@ -38,10 +38,13 @@ final class FormRefusals implements Check
      */
     public function validated(array $result): array
     {
-        // Gravity Forms' script adds version_hash to every form it submits, so
-        // without it no script ran: a bot posting the page's HTML. A browser
-        // whose scripts failed still posts the page's own values, which pass
-        // the state check, so a stale page or a broken field is still logged.
+        // version_hash isn't in the HTML: Gravity Forms' script adds it as the
+        // form is sent. Without it, that script didn't run, and a value the
+        // state check refuses was changed some other way, as bots do when they
+        // post the page's HTML. A JS error alone doesn't get here: the browser
+        // then posts the values the page rendered, which pass. Missed: a stale
+        // page or another script changing a field while Gravity Forms' script
+        // also failed.
         if (empty($_POST['version_hash'])) { // phpcs:ignore WordPress.Security.NonceVerification
             return $result;
         }
