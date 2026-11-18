@@ -90,6 +90,52 @@ test('a scriptless submission failing the state check is not logged', async ({ p
     expect(lines()).toEqual([]);
 });
 
+/** A page whose Gravity Forms scripts fail to load, as when blocked or broken. */
+async function withoutGravityFormsScripts(page: Page): Promise<void> {
+    await page.route('**/plugins/gravityforms/**/*.js*', (route) => route.abort());
+}
+
+/**
+ * Gravity Forms' honeypot keeps a person whose page didn't run its script as
+ * spam, for the version_hash that script adds: on a site where it fails to
+ * load, every real entry. Our own script ran, so it's a person.
+ */
+test('a person whose Gravity Forms script did not run is logged as spam', async ({ page }) => {
+    await withoutGravityFormsScripts(page);
+    await fill(page);
+    await page.locator('input[type="submit"], button[type="submit"]').first().click();
+    await page.waitForLoadState('load');
+
+    expect(latestStatus(site.form)).toBe('spam');
+    expect(lines()).toEqual([
+        expect.stringMatching(new RegExp(`^gds-monitoring: gform spam blog 1 form ${site.form} entry \\d+ \\(Honeypot Spam Filter\\): The version_hash was not included in the submission\\.$`)),
+    ]);
+});
+
+test('a bot posting the page untouched is kept as spam but not logged', async ({ page }) => {
+    await fill(page);
+    const fields = await page.locator(`#gform_${site.form}`).evaluate((form: HTMLFormElement) => Object.fromEntries(new FormData(form) as unknown as Iterable<[string, string]>));
+
+    await page.request.post(site.page, { multipart: fields });
+
+    expect(latestStatus(site.form)).toBe('spam');
+    expect(lines()).toEqual([]);
+});
+
+test('a refusal is logged when only Gravity Forms\' script failed', async ({ page }) => {
+    site = setup('validate-state');
+    await withoutGravityFormsScripts(page);
+    await fill(page);
+    await page.locator(`#input_${site.form}_2 option[value="large"]`).evaluate((option: HTMLOptionElement) => {
+        option.value = 'medium';
+    });
+    await page.locator(`#input_${site.form}_2`).selectOption('medium');
+    await page.locator('input[type="submit"], button[type="submit"]').first().click();
+
+    await expect(page.locator(`#field_${site.form}_2 .gfield_validation_message`)).toBeVisible();
+    expect(lines()).toEqual([`gds-monitoring: gform state invalid blog 1 form ${site.form} fields 2`]);
+});
+
 async function upload(page: Page): Promise<void> {
     await page.locator(`#gform_multifile_upload_${site.form}_3 input[type="file"]`).setInputFiles({
         name: 'note.txt', mimeType: 'text/plain', buffer: Buffer.from('hello'),

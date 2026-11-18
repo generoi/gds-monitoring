@@ -3,12 +3,14 @@
 namespace GeneroWP\Monitoring\Checks;
 
 use GeneroWP\Monitoring\Log;
+use GeneroWP\Monitoring\ScriptMarker;
 
 /**
  * Gravity Forms entries marked as spam, with the filter and its reason, so a
  * real person caught by a spam filter (a stale page failing state validation)
  * is seen and can be marked not spam. Reasons only bots give are skipped:
- * hundreds a month on some sites.
+ * hundreds a month on some sites. A missing input Gravity Forms' script adds
+ * is a bot's only when our own script didn't run either (ScriptMarker).
  */
 final class SpamEntries implements Check
 {
@@ -36,7 +38,11 @@ final class SpamEntries implements Check
 
         // Matched as written, masked only for the log.
         $reason = (string) ($spam['reason'] ?? '');
-        if ($this->isBot(trim((string) preg_replace('/\s+/', ' ', $reason)))) {
+        $normalized = trim((string) preg_replace('/\s+/', ' ', $reason));
+        // A person whose Gravity Forms script didn't run is caught for the
+        // inputs it adds: on a site where it fails to load, every real entry.
+        $person = ScriptMarker::ran() && $this->matches($this->scriptReasons(), $normalized);
+        if (! $person && $this->matches($this->botReasons(), $normalized)) {
             return;
         }
 
@@ -68,9 +74,26 @@ final class SpamEntries implements Check
         ];
     }
 
-    private function isBot(string $reason): bool
+    /**
+     * The bot reasons that mean only that Gravity Forms' script didn't run,
+     * which a person's browser can give too: see ScriptMarker.
+     *
+     * @return list<string>
+     */
+    private function scriptReasons(): array
     {
-        foreach ($this->botReasons() as $text) {
+        return [
+            __('The version_hash was not included in the submission.', 'gravityforms'),
+            __('The gform_submission_speeds input is empty or invalid.', 'gravityforms'),
+        ];
+    }
+
+    /**
+     * @param  list<string>  $texts
+     */
+    private function matches(array $texts, string $reason): bool
+    {
+        foreach ($texts as $text) {
             // A placeholder (%d, %1$s) matches anything.
             $pattern = preg_replace('/%(\d+\\\\\$)?[ds]/', '.*', preg_quote($text, '/'));
             if (preg_match('/^'.$pattern.'$/', $reason)) {

@@ -3,13 +3,14 @@
 namespace GeneroWP\Monitoring\Checks;
 
 use GeneroWP\Monitoring\Log;
+use GeneroWP\Monitoring\ScriptMarker;
 
 /**
  * A visitor refused by Gravity Forms, which leaves no entry to see:
  *
  * - a submission with fields failing the state check, as from a page cached
  *   before the form was edited or past the state token's life, unless no
- *   script ran on the page (a bot posting its HTML);
+ *   script ran on the page (a bot posting its HTML, see ScriptMarker);
  * - a multi-file upload refused for an expired nonce ("Your session has
  *   expired"), the file sent before the form is;
  * - a multi-file upload the server failed (too large for post_max_size, no
@@ -38,14 +39,11 @@ final class FormRefusals implements Check
      */
     public function validated(array $result): array
     {
-        // version_hash isn't in the HTML: Gravity Forms' script adds it as the
-        // form is sent. Without it, that script didn't run, and a value the
-        // state check refuses was changed some other way, as bots do when they
-        // post the page's HTML. A JS error alone doesn't get here: the browser
-        // then posts the values the page rendered, which pass. Missed: a stale
-        // page or another script changing a field while Gravity Forms' script
-        // also failed.
-        if (empty($_POST['version_hash'])) { // phpcs:ignore WordPress.Security.NonceVerification
+        // Neither Gravity Forms' version_hash nor our marker: no script ran,
+        // and a value the state check refuses was changed by a bot posting
+        // the page's HTML. A person whose Gravity Forms script failed still
+        // sends the marker, so a stale page or a broken field is logged.
+        if (empty($_POST['version_hash']) && ! ScriptMarker::ran()) { // phpcs:ignore WordPress.Security.NonceVerification
             return $result;
         }
 
