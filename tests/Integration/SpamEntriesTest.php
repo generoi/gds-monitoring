@@ -2,6 +2,7 @@
 
 namespace GeneroWP\Monitoring\Tests\Integration;
 
+use GeneroWP\Monitoring\ScriptMarker;
 use GeneroWP\Monitoring\Tests\Support\TestCase;
 
 class SpamEntriesTest extends TestCase
@@ -63,6 +64,42 @@ class SpamEntriesTest extends TestCase
     public function test_reasons_only_bots_give_are_skipped(string $filter, string $reason): void
     {
         $this->submitAsSpam($filter, $reason);
+
+        $this->assertSame([], $this->lines);
+    }
+
+    /**
+     * @return array<string,array{string}>
+     */
+    public static function scriptReasons(): array
+    {
+        return [
+            'no version_hash' => ['The version_hash was not included in the submission.'],
+            'no submission speeds' => ['The gform_submission_speeds input is empty or invalid.'],
+        ];
+    }
+
+    /**
+     * Our script ran, Gravity Forms' didn't: a person whose page failed to
+     * load or run it.
+     *
+     * @dataProvider scriptReasons
+     */
+    public function test_a_person_whose_gravity_forms_script_did_not_run_is_logged(string $reason): void
+    {
+        $_POST[ScriptMarker::INPUT] = '1';
+        $formId = $this->submitAsSpam('Honeypot Spam Filter', $reason);
+        unset($_POST[ScriptMarker::INPUT]);
+
+        $this->assertCount(1, $this->lines);
+        $this->assertMatchesRegularExpression('/^gds-monitoring: gform spam blog 1 form '.$formId.' entry \d+ \(Honeypot Spam Filter\): '.preg_quote($reason, '/').'$/', $this->lines[0]);
+    }
+
+    public function test_other_bot_reasons_are_skipped_whatever_ran(): void
+    {
+        $_POST[ScriptMarker::INPUT] = '1';
+        $this->submitAsSpam('Honeypot Spam Filter', 'The honeypot input is not empty.');
+        unset($_POST[ScriptMarker::INPUT]);
 
         $this->assertSame([], $this->lines);
     }

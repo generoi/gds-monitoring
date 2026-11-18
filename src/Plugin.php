@@ -51,6 +51,7 @@ final class Plugin
         }
 
         (new TestSubmissions)->register();
+        (new ScriptMarker)->register();
 
         self::$schedule = new Schedule($scheduled);
         self::$schedule->register();
