@@ -33,13 +33,12 @@ final class EntryErrorNotes implements Check
 
         $entry = class_exists('GFAPI') ? \GFAPI::get_entry($entryId) : null;
 
-        Log::write(sprintf(
-            'gform %s error blog %d form %d entry %d: %s',
+        Reports::write('gform', sprintf(
+            '%s error form %d entry %d: %s',
             $noteType,
-            get_current_blog_id(),
             is_array($entry) ? (int) $entry['form_id'] : 0,
             $entryId,
             Log::clean($note)
-        ));
+        ), false);
     }
 }

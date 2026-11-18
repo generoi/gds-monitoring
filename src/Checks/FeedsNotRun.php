@@ -2,9 +2,7 @@
 
 namespace GeneroWP\Monitoring\Checks;
 
-use GeneroWP\Monitoring\Log;
 use GeneroWP\Monitoring\Site;
-use GeneroWP\Monitoring\Throttle;
 
 /**
  * Active feeds that never ran for recent entries: turned off on the add-on's
@@ -64,16 +62,15 @@ final class FeedsNotRun implements Scheduled
             }
 
             [$missed, $due] = $this->missed($feed, $form, $addon, $now, $seen[(int) $feed['id']]);
-            if ($missed > 0 && Throttle::allow('feed-'.$feed['id'], 12 * HOUR_IN_SECONDS, $now)) {
-                Log::write(sprintf(
-                    'gform feed not run blog %d form %d feed %d (%s): %d of %d entries in the last 24 h',
-                    get_current_blog_id(),
+            if ($missed > 0) {
+                Reports::write('gform', sprintf(
+                    'feed not run form %d feed %d (%s): %d of %d entries in the last 24 h',
                     (int) $form['id'],
                     (int) $feed['id'],
                     (string) $feed['addon_slug'],
                     $missed,
                     $due
-                ));
+                ), 'feed-'.$feed['id'], $now);
             }
         }
     }

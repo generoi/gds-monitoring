@@ -56,12 +56,11 @@ final class FormRefusals implements Check
         }
 
         if ($failed) {
-            Log::write(sprintf(
-                'gform state invalid blog %d form %d fields %s',
-                get_current_blog_id(),
+            Reports::write('gform', sprintf(
+                'state invalid form %d fields %s',
                 (int) $form['id'],
                 implode(',', $failed)
-            ));
+            ), false);
         }
 
         return $result;
@@ -113,7 +112,7 @@ final class FormRefusals implements Check
         if ($code === 403) {
             // Only a bad nonce gets 403; without one it's not a visitor's page.
             if (! empty($request["_gform_file_upload_nonce_{$formId}_{$fieldId}"]) || ! empty($request["_gform_file_upload_nonce_{$formId}"])) {
-                Log::write(sprintf('gform upload nonce expired blog %d form %d field %d', get_current_blog_id(), $formId, $fieldId));
+                Reports::write('gform', sprintf('upload nonce expired form %d field %d', $formId, $fieldId), false);
             }
 
             return;
@@ -126,7 +125,7 @@ final class FormRefusals implements Check
         $names = array_filter([(string) ($request['original_filename'] ?? ''), (string) ($request['name'] ?? '')]);
         $message = trim(str_replace($names, '', (string) ($reply['error']['message'] ?? '')));
 
-        Log::write(sprintf('gform upload failed blog %d form %d field %d (%s): %s', get_current_blog_id(), $formId, $fieldId, (string) $code, Log::clean($message)));
+        Reports::write('gform', sprintf('upload failed form %d field %d (%s): %s', $formId, $fieldId, (string) $code, Log::clean($message)), false);
     }
 
     /**

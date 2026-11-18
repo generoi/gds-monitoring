@@ -50,7 +50,7 @@ class FormSilenceTest extends TestCase
 
         (new FormSilence)->run($now);
 
-        $this->assertSame(["gds-monitoring: gform silent blog 1 form {$formId}: no entry for 72 h, longest gap in 90 days 2 h"], $this->lines);
+        $this->assertSame(["gds-monitoring: report gform blog 1: silent form {$formId}: no entry for 72 h, longest gap in 90 days 2 h"], $this->lines);
     }
 
     public function test_a_quiet_spell_like_earlier_ones_is_not(): void

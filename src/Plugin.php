@@ -2,14 +2,15 @@
 
 namespace GeneroWP\Monitoring;
 
-use GeneroWP\Monitoring\Checks\AltchaRejections;
 use GeneroWP\Monitoring\Checks\Check;
 use GeneroWP\Monitoring\Checks\EntryErrorNotes;
 use GeneroWP\Monitoring\Checks\FeedsNotRun;
 use GeneroWP\Monitoring\Checks\FormRefusals;
 use GeneroWP\Monitoring\Checks\FormSilence;
 use GeneroWP\Monitoring\Checks\Heartbeat;
+use GeneroWP\Monitoring\Checks\Jobs;
 use GeneroWP\Monitoring\Checks\MailFailures;
+use GeneroWP\Monitoring\Checks\Reports;
 use GeneroWP\Monitoring\Checks\Scheduled;
 use GeneroWP\Monitoring\Checks\SpamEntries;
 
@@ -26,10 +27,11 @@ final class Plugin
             new SpamEntries,
             new EntryErrorNotes,
             new FormRefusals,
-            new AltchaRejections,
             new MailFailures,
             new FeedsNotRun,
             new FormSilence,
+            new Reports,
+            new Jobs,
             new Heartbeat,
         ];
     }

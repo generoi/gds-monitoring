@@ -40,7 +40,7 @@ class FormRefusalsTest extends TestCase
             ['form_id' => '4', 'field_id' => '7', '_gform_file_upload_nonce_4_7' => 'abc123']
         );
 
-        $this->assertSame(['gds-monitoring: gform upload nonce expired blog 1 form 4 field 7'], $this->lines);
+        $this->assertSame(['gds-monitoring: report gform blog 1: upload nonce expired form 4 field 7'], $this->lines);
     }
 
     public function test_a_server_failure_is_logged_without_the_file_name(): void
@@ -52,8 +52,8 @@ class FormRefusalsTest extends TestCase
         $check->uploadAnswered($this->reply(105, 'Upload unsuccessful jane-doe-cv.pdf'), $request);
 
         $this->assertSame([
-            'gds-monitoring: gform upload failed blog 1 form 4 field 7 (500): Failed to upload file.',
-            'gds-monitoring: gform upload failed blog 1 form 4 field 7 (105): Upload unsuccessful',
+            'gds-monitoring: report gform blog 1: upload failed form 4 field 7 (500): Failed to upload file.',
+            'gds-monitoring: report gform blog 1: upload failed form 4 field 7 (105): Upload unsuccessful',
         ], $this->lines);
     }
 
