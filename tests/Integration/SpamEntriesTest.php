@@ -39,7 +39,7 @@ class SpamEntriesTest extends TestCase
 
         $this->assertCount(1, $this->lines);
         $this->assertMatchesRegularExpression(
-            "/^gds-monitoring: gform spam blog 1 form {$formId} entry \d+ \(Honeypot Spam Filter\): The form failed state validation before it was successfully submitted\. This typically indicates bot $/",
+            "/^gds-monitoring: report gform blog 1: spam form {$formId} entry \d+ \(Honeypot Spam Filter\): The form failed state validation before it was successfully submitted\. This typically indicates bot $/",
             $this->lines[0]
         );
     }
@@ -92,7 +92,7 @@ class SpamEntriesTest extends TestCase
         unset($_POST[ScriptMarker::INPUT]);
 
         $this->assertCount(1, $this->lines);
-        $this->assertMatchesRegularExpression('/^gds-monitoring: gform spam blog 1 form '.$formId.' entry \d+ \(Honeypot Spam Filter\): '.preg_quote($reason, '/').'$/', $this->lines[0]);
+        $this->assertMatchesRegularExpression('/^gds-monitoring: report gform blog 1: spam form '.$formId.' entry \d+ \(Honeypot Spam Filter\): '.preg_quote($reason, '/').'$/', $this->lines[0]);
     }
 
     public function test_other_bot_reasons_are_skipped_whatever_ran(): void

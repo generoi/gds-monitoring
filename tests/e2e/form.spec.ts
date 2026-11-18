@@ -30,7 +30,7 @@ test('a submission whose feed fails is logged as a feed error', async ({ page })
 
     expect(latestStatus(site.form)).toBe('active');
     expect(lines()).toEqual([
-        expect.stringMatching(new RegExp(`^gds-monitoring: gform gdse2efeed error blog 1 form ${site.form} entry \\d+: E2E: the CRM refused it$`)),
+        expect.stringMatching(new RegExp(`^gds-monitoring: report gform blog 1: gdse2efeed error form ${site.form} entry \\d+: E2E: the CRM refused it$`)),
     ]);
 });
 
@@ -48,7 +48,7 @@ test('a submission from a stale page is kept as spam and logged', async ({ page 
 
     expect(latestStatus(site.form)).toBe('spam');
     expect(lines()).toEqual([
-        expect.stringMatching(new RegExp(`^gds-monitoring: gform spam blog 1 form ${site.form} entry \\d+ \\(Honeypot Spam Filter\\): Hidden input \\(name: state_${site.form}\\) does not contain the expected value\\.$`)),
+        expect.stringMatching(new RegExp(`^gds-monitoring: report gform blog 1: spam form ${site.form} entry \\d+ \\(Honeypot Spam Filter\\): Hidden input \\(name: state_${site.form}\\) does not contain the expected value\\.$`)),
     ]);
 });
 
@@ -66,7 +66,7 @@ test('a submission failing the state check is logged', async ({ page }) => {
     await page.locator('input[type="submit"], button[type="submit"]').first().click();
 
     await expect(page.locator(`#field_${site.form}_2 .gfield_validation_message`)).toBeVisible();
-    expect(lines()).toEqual([`gds-monitoring: gform state invalid blog 1 form ${site.form} fields 2`]);
+    expect(lines()).toEqual([`gds-monitoring: report gform blog 1: state invalid form ${site.form} fields 2`]);
 });
 
 /**
@@ -108,7 +108,7 @@ test('a person whose Gravity Forms script did not run is logged as spam', async 
 
     expect(latestStatus(site.form)).toBe('spam');
     expect(lines()).toEqual([
-        expect.stringMatching(new RegExp(`^gds-monitoring: gform spam blog 1 form ${site.form} entry \\d+ \\(Honeypot Spam Filter\\): The version_hash was not included in the submission\\.$`)),
+        expect.stringMatching(new RegExp(`^gds-monitoring: report gform blog 1: spam form ${site.form} entry \\d+ \\(Honeypot Spam Filter\\): The version_hash was not included in the submission\\.$`)),
     ]);
 });
 
@@ -133,7 +133,7 @@ test('a refusal is logged when only Gravity Forms\' script failed', async ({ pag
     await page.locator('input[type="submit"], button[type="submit"]').first().click();
 
     await expect(page.locator(`#field_${site.form}_2 .gfield_validation_message`)).toBeVisible();
-    expect(lines()).toEqual([`gds-monitoring: gform state invalid blog 1 form ${site.form} fields 2`]);
+    expect(lines()).toEqual([`gds-monitoring: report gform blog 1: state invalid form ${site.form} fields 2`]);
 });
 
 async function upload(page: Page): Promise<void> {
@@ -162,7 +162,7 @@ test('an upload refused for an expired nonce is logged', async ({ page }) => {
     await upload(page);
 
     await expect(page.getByText('Your session has expired')).toBeVisible();
-    await expect.poll(lines).toEqual([`gds-monitoring: gform upload nonce expired blog 1 form ${site.form} field 3`]);
+    await expect.poll(lines).toEqual([`gds-monitoring: report gform blog 1: upload nonce expired form ${site.form} field 3`]);
 });
 
 test('a bot filling the honeypot is kept as spam but not logged', async ({ page }) => {

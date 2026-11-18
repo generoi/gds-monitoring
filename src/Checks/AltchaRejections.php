@@ -2,8 +2,6 @@
 
 namespace GeneroWP\Monitoring\Checks;
 
-use GeneroWP\Monitoring\Log;
-
 /**
  * Submissions ALTCHA (generoi/gravityforms-altcha) refused for a reason that
  * takes a real, signed challenge: it expired before the visitor submitted, or
@@ -31,11 +29,11 @@ final class AltchaRejections implements Check
             return;
         }
 
-        $line = sprintf('gform altcha rejected blog %d form %d (%s)', get_current_blog_id(), (int) ($context['form'] ?? 0), $reason);
+        $line = sprintf('rejected form %d (%s)', (int) ($context['form'] ?? 0), $reason);
         if (isset($context['expired_for'])) {
             $line .= sprintf(': %d s past expiry', (int) $context['expired_for']);
         }
 
-        Log::write($line);
+        Reports::write('altcha', $line, false);
     }
 }

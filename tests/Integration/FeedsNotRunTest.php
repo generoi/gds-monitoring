@@ -40,7 +40,7 @@ class FeedsNotRunTest extends TestCase
 
         (new FeedsNotRun)->run($now);
 
-        $this->assertSame(["gds-monitoring: gform feed not run blog 1 form {$formId} feed {$feedId} (gdstestfeed): 1 of 2 entries in the last 24 h"], $this->lines);
+        $this->assertSame(["gds-monitoring: report gform blog 1: feed not run form {$formId} feed {$feedId} (gdstestfeed): 1 of 2 entries in the last 24 h"], $this->lines);
     }
 
     public function test_a_feed_that_ran_for_every_entry_is_quiet(): void

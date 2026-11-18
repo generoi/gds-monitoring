@@ -18,6 +18,6 @@ final class MailFailures implements Check
 
     public function failed(WP_Error $error): void
     {
-        Log::write(sprintf('wp_mail failed blog %d: %s', get_current_blog_id(), Log::clean($error->get_error_message())));
+        Reports::write('wp_mail', 'failed: '.Log::clean($error->get_error_message()), false);
     }
 }

@@ -46,14 +46,13 @@ final class SpamEntries implements Check
             return;
         }
 
-        Log::write(sprintf(
-            'gform spam blog %d form %d entry %d (%s): %s',
-            get_current_blog_id(),
+        Reports::write('gform', sprintf(
+            'spam form %d entry %d (%s): %s',
             $formId,
             (int) $entry['id'],
             (string) ($spam['filter'] ?? 'unknown'),
             Log::clean($reason) ?: 'no reason recorded'
-        ));
+        ), false);
     }
 
     /**

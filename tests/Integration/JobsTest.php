@@ -19,7 +19,7 @@ class JobsTest extends TestCase
      */
     private function jobLines(): array
     {
-        return array_values(array_filter($this->lines, fn (string $line): bool => str_contains($line, 'job overdue')));
+        return array_values(array_filter($this->lines, fn (string $line): bool => str_contains($line, 'report job')));
     }
 
     public function test_a_job_past_its_max_age_is_reported_twice_a_day(): void
@@ -33,8 +33,8 @@ class JobsTest extends TestCase
         }
 
         $this->assertSame([
-            'gds-monitoring: job overdue blog 1 plm recipes: last completed 27 h ago',
-            'gds-monitoring: job overdue blog 1 plm recipes: last completed 39 h ago',
+            'gds-monitoring: report job blog 1: overdue plm recipes: last completed 27 h ago',
+            'gds-monitoring: report job blog 1: overdue plm recipes: last completed 39 h ago',
         ], $this->jobLines());
     }
 

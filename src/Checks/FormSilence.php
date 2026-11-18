@@ -2,9 +2,7 @@
 
 namespace GeneroWP\Monitoring\Checks;
 
-use GeneroWP\Monitoring\Log;
 use GeneroWP\Monitoring\Site;
-use GeneroWP\Monitoring\Throttle;
 
 /**
  * Active forms quiet for longer than they have been in 90 days: a form that
@@ -50,14 +48,13 @@ final class FormSilence implements Scheduled
                     continue;
                 }
             }
-            if ($silence && Throttle::allow('silent-'.$form['id'], 12 * HOUR_IN_SECONDS, $now)) {
-                Log::write(sprintf(
-                    'gform silent blog %d form %d: no entry for %d h, longest gap in 90 days %d h',
-                    get_current_blog_id(),
+            if ($silence) {
+                Reports::write('gform', sprintf(
+                    'silent form %d: no entry for %d h, longest gap in 90 days %d h',
                     (int) $form['id'],
                     intdiv($silence[0], HOUR_IN_SECONDS),
                     intdiv($silence[1], HOUR_IN_SECONDS)
-                ));
+                ), 'silent-'.$form['id'], $now);
             }
         }
     }

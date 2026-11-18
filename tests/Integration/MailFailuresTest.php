@@ -11,6 +11,6 @@ class MailFailuresTest extends TestCase
     {
         do_action('wp_mail_failed', new WP_Error('wp_mail_failed', 'SMTP Error: The following recipients failed: jane@example.com: Mailbox unavailable'));
 
-        $this->assertSame(['gds-monitoring: wp_mail failed blog 1: SMTP Error: The following recipients failed: <email> Mailbox unavailable'], $this->lines);
+        $this->assertSame(['gds-monitoring: report wp_mail blog 1: failed: SMTP Error: The following recipients failed: <email> Mailbox unavailable'], $this->lines);
     }
 }

@@ -2,9 +2,6 @@
 
 namespace GeneroWP\Monitoring\Checks;
 
-use GeneroWP\Monitoring\Log;
-use GeneroWP\Monitoring\Throttle;
-
 /**
  * A recurring job another plugin runs (an import, a sync, an export) tells
  * this each time it completes, with how long it may go without:
@@ -49,8 +46,8 @@ final class Jobs implements Check, Scheduled
 
         foreach ($jobs as $job => $last) {
             $age = $now - (int) ($last['at'] ?? $now);
-            if ($age > (int) ($last['max_age'] ?? PHP_INT_MAX) && Throttle::allow('job-'.$job, 12 * HOUR_IN_SECONDS, $now)) {
-                Log::write(sprintf('job overdue blog %d %s: last completed %d h ago', get_current_blog_id(), $job, intdiv($age, HOUR_IN_SECONDS)));
+            if ($age > (int) ($last['max_age'] ?? PHP_INT_MAX)) {
+                Reports::write('job', sprintf('overdue %s: last completed %d h ago', $job, intdiv($age, HOUR_IN_SECONDS)), 'job-'.$job, $now);
             }
         }
     }

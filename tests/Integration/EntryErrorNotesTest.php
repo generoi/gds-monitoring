@@ -12,7 +12,7 @@ class EntryErrorNotesTest extends TestCase
         $entryId = $this->entry($formId, time());
         \GFFormsModel::add_note($entryId, 0, 'Mailchimp', "Mailchimp feed: jane@example.com is\nalready a list member.", 'gravityformsmailchimp', 'error');
 
-        $this->assertSame(["gds-monitoring: gform gravityformsmailchimp error blog 1 form {$formId} entry {$entryId}: Mailchimp feed: <email> is already a list member."], $this->lines);
+        $this->assertSame(["gds-monitoring: report gform blog 1: gravityformsmailchimp error form {$formId} entry {$entryId}: Mailchimp feed: <email> is already a list member."], $this->lines);
     }
 
     /**
@@ -36,7 +36,7 @@ class EntryErrorNotesTest extends TestCase
         $this->mailchimpResponse(400, 'Invalid Resource', 'Your merge fields were invalid.');
         \GFFormsModel::add_note($entryId, 0, 'Mailchimp', 'Mailchimp Feed 1: Unable to add/update subscriber: Invalid Resource', 'gravityformsmailchimp', 'error');
 
-        $this->assertSame(["gds-monitoring: gform gravityformsmailchimp error blog 1 form {$formId} entry {$entryId}: Mailchimp Feed 1: Unable to add/update subscriber: Invalid Resource"], $this->lines);
+        $this->assertSame(["gds-monitoring: report gform blog 1: gravityformsmailchimp error form {$formId} entry {$entryId}: Mailchimp Feed 1: Unable to add/update subscriber: Invalid Resource"], $this->lines);
     }
 
     /**
@@ -51,7 +51,7 @@ class EntryErrorNotesTest extends TestCase
         $this->mailchimpResponse(200, '', '');
         \GFFormsModel::add_note($entryId, 0, 'Mailchimp', 'Mailchimp Feed 1: Unable to add/update subscriber tags: Resource Not Found', 'gravityformsmailchimp', 'error');
 
-        $this->assertSame(["gds-monitoring: gform gravityformsmailchimp error blog 1 form {$formId} entry {$entryId}: Mailchimp Feed 1: Unable to add/update subscriber tags: Resource Not Found"], $this->lines);
+        $this->assertSame(["gds-monitoring: report gform blog 1: gravityformsmailchimp error form {$formId} entry {$entryId}: Mailchimp Feed 1: Unable to add/update subscriber tags: Resource Not Found"], $this->lines);
     }
 
     /**
@@ -80,7 +80,7 @@ class EntryErrorNotesTest extends TestCase
         $this->mailchimpResponse(403, 'Forbidden', 'This account has been disabled. Contact apihelp@mailchimp.com.');
         \GFFormsModel::add_note($entryId, 0, 'Mailchimp', 'Mailchimp Feed 1: Unable to add/update subscriber: Forbidden', 'gravityformsmailchimp', 'error');
 
-        $this->assertSame(["gds-monitoring: gform gravityformsmailchimp error blog 1 form {$formId} entry {$entryId}: Mailchimp Feed 1: Unable to add/update subscriber: Forbidden"], $this->lines);
+        $this->assertSame(["gds-monitoring: report gform blog 1: gravityformsmailchimp error form {$formId} entry {$entryId}: Mailchimp Feed 1: Unable to add/update subscriber: Forbidden"], $this->lines);
     }
 
     public function test_other_notes_are_not_logged(): void
@@ -106,7 +106,7 @@ class EntryErrorNotesTest extends TestCase
         \GFAPI::send_notifications(\GFAPI::get_form($formId), \GFAPI::get_entry($entryId));
         remove_filter('pre_wp_mail', '__return_false');
 
-        $this->assertSame(["gds-monitoring: gform notification error blog 1 form {$formId} entry {$entryId}: WordPress was unable to send the notification email."], $this->lines);
+        $this->assertSame(["gds-monitoring: report gform blog 1: notification error form {$formId} entry {$entryId}: WordPress was unable to send the notification email."], $this->lines);
     }
 
     /**

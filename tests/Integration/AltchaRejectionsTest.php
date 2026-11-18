@@ -14,14 +14,14 @@ class AltchaRejectionsTest extends TestCase
     {
         do_action('genero/gravityforms_altcha/log', 'altcha', 'fail', ['form' => 43, 'reason' => 'expired', 'expired_for' => 125]);
 
-        $this->assertSame(['gds-monitoring: gform altcha rejected blog 1 form 43 (expired): 125 s past expiry'], $this->lines);
+        $this->assertSame(['gds-monitoring: report altcha blog 1: rejected form 43 (expired): 125 s past expiry'], $this->lines);
     }
 
     public function test_a_signature_that_no_longer_matches_is_logged(): void
     {
         do_action('genero/gravityforms_altcha/log', 'altcha', 'fail', ['form' => 43, 'reason' => 'invalid_signature']);
 
-        $this->assertSame(['gds-monitoring: gform altcha rejected blog 1 form 43 (invalid_signature)'], $this->lines);
+        $this->assertSame(['gds-monitoring: report altcha blog 1: rejected form 43 (invalid_signature)'], $this->lines);
     }
 
     /**
