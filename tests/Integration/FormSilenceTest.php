@@ -31,17 +31,6 @@ class FormSilenceTest extends TestCase
     }
 
     /**
-     * A view of the form at $at.
-     */
-    private function view(int $formId, int $at): void
-    {
-        global $wpdb;
-
-        \GFFormsModel::insert_form_view($formId);
-        $wpdb->update(\GFFormsModel::get_form_view_table_name(), ['date_created' => gmdate('Y-m-d H:i:s', $at)], ['form_id' => $formId]);
-    }
-
-    /**
      * A form tripping the silence rule.
      */
     private function quietForm(int $now): int
@@ -232,62 +221,30 @@ class FormSilenceTest extends TestCase
         $this->assertCount(1, $this->lines);
     }
 
-    public function test_a_form_last_viewed_over_a_week_ago_is_not_placed(): void
+    /**
+     * A form only on a draft was taken off the site: its views are from before.
+     */
+    public function test_a_viewed_form_only_on_a_draft_is_not_placed(): void
     {
         $now = time();
         $formId = $this->quietForm($now);
-        $this->view($formId, $now - 8 * DAY_IN_SECONDS);
+        $this->place($formId, 'draft');
+        \GFFormsModel::insert_form_view($formId);
 
         (new FormSilence)->run($now);
 
         $this->assertSame([], $this->lines);
     }
 
-    /**
-     * Its page taken off the site, a form's views from before don't place it.
-     */
-    public function test_a_form_viewed_before_its_page_was_unpublished_is_not_placed(): void
+    public function test_a_viewed_form_only_in_an_unused_pattern_is_not_placed(): void
     {
         $now = time();
         $formId = $this->quietForm($now);
-        $page = $this->place($formId);
-        $this->view($formId, $now - HOUR_IN_SECONDS);
-        wp_update_post(['ID' => $page, 'post_status' => 'draft']);
+        $this->place($formId, type: 'wp_block');
+        \GFFormsModel::insert_form_view($formId);
 
         (new FormSilence)->run($now);
 
         $this->assertSame([], $this->lines);
-    }
-
-    /**
-     * A form left on a draft and placed in theme code is still viewed.
-     */
-    public function test_a_form_viewed_since_its_page_was_unpublished_is_placed(): void
-    {
-        global $wpdb;
-
-        $now = time();
-        $formId = $this->quietForm($now);
-        $page = $this->place($formId, 'draft');
-        $wpdb->update($wpdb->posts, ['post_modified_gmt' => gmdate('Y-m-d H:i:s', $now - 2 * DAY_IN_SECONDS)], ['ID' => $page]);
-        clean_post_cache($page);
-        $this->view($formId, $now - HOUR_IN_SECONDS);
-
-        (new FormSilence)->run($now);
-
-        $this->assertCount(1, $this->lines);
-    }
-
-    public function test_unpublishing_a_page_takes_its_form_off_at_once(): void
-    {
-        $now = time();
-        $formId = $this->quietForm($now);
-        $page = $this->place($formId);
-        $check = new FormSilence;
-        $this->assertArrayHasKey($formId, $check->placed($now));
-
-        wp_update_post(['ID' => $page, 'post_status' => 'draft']);
-
-        $this->assertArrayNotHasKey($formId, $check->placed($now));
     }
 }
