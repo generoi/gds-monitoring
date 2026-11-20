@@ -39,14 +39,6 @@ final class FormRefusals implements Check
      */
     public function validated(array $result): array
     {
-        // Neither Gravity Forms' version_hash nor our marker: no script ran,
-        // and a value the state check refuses was changed by a bot posting
-        // the page's HTML. A person whose Gravity Forms script failed still
-        // sends the marker, so a stale page or a broken field is logged.
-        if (empty($_POST['version_hash']) && ! ScriptMarker::ran()) { // phpcs:ignore WordPress.Security.NonceVerification
-            return $result;
-        }
-
         $form = $result['form'] ?? [];
         $failed = [];
         foreach ($form['fields'] ?? [] as $field) {
@@ -55,7 +47,7 @@ final class FormRefusals implements Check
             }
         }
 
-        if ($failed) {
+        if ($failed && $this->scriptRan((int) $form['id'])) {
             Reports::write('gform', sprintf(
                 'state invalid form %d fields %s',
                 (int) $form['id'],
@@ -126,6 +118,27 @@ final class FormRefusals implements Check
         $message = trim(str_replace($names, '', (string) ($reply['error']['message'] ?? '')));
 
         Reports::write('gform', sprintf('upload failed form %d field %d (%s): %s', $formId, $fieldId, (string) $code, Log::clean($message)), false);
+    }
+
+    /**
+     * Neither Gravity Forms' version_hash nor our marker: no script ran, and a
+     * value the state check refuses was changed by a bot posting the page's
+     * HTML. A person whose Gravity Forms script failed still sends the marker,
+     * so a stale page or a broken field is logged.
+     *
+     * version_hash counts only when the page didn't print our script (from
+     * before it, or a token refused whole, as from a page open since an update
+     * changed how tokens are signed): bots copy its value from the page's
+     * HTML. Called once the state check has read the token, so it counts no
+     * failure of its own.
+     */
+    private function scriptRan(int $formId): bool
+    {
+        if (ScriptMarker::ran()) {
+            return true;
+        }
+
+        return ! empty($_POST['version_hash']) && ! ScriptMarker::printed($formId); // phpcs:ignore WordPress.Security.NonceVerification
     }
 
     /**
