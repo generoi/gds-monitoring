@@ -10,6 +10,10 @@ namespace GeneroWP\Monitoring;
  * Gravity Forms script failed to load or threw still sends it; a bot posting
  * the HTML doesn't. Like Gravity Forms, it adds nothing in a browser driven by
  * automation (Selenium, PhantomJS and the like), so those stay bots.
+ *
+ * The form's state token (Gravity Forms 3) also records that the page printed
+ * our script, so a submission can be held to the page it came from. Not so
+ * version_hash: its value is in the page's HTML for any bot to copy.
  */
 final class ScriptMarker
 {
@@ -20,6 +24,7 @@ final class ScriptMarker
     public function register(): void
     {
         add_filter('gform_get_form_filter', [$this, 'form'], 10, 1);
+        add_action('gform_state_pre_encode', [$this, 'state'], 10, 3);
     }
 
     /**
@@ -29,6 +34,36 @@ final class ScriptMarker
     public static function ran(): bool
     {
         return ! empty($_POST[self::INPUT]); // phpcs:ignore WordPress.Security.NonceVerification
+    }
+
+    /**
+     * Whether the submission's state token, signed by Gravity Forms, says its
+     * page printed our script. False for a token Gravity Forms refuses whole,
+     * and for a page from before this.
+     */
+    public static function printed(int $formId): bool
+    {
+        // Gravity Forms 2.x has no State_Handler and never calls state().
+        if (! class_exists('GFFormDisplay') || ! class_exists('Gravity_Forms\Gravity_Forms\Form_Display\State\State_Handler')) {
+            return false;
+        }
+        $state = \GFFormDisplay::get_state_handler();
+
+        // A key the token doesn't hold passes any value, '' included.
+        return $state->is_valid_state_input($formId) && ! $state->is_valid_additional_value($formId, self::INPUT, '');
+    }
+
+    /**
+     * Every form's markup passes through form(), which prints the script once
+     * per page, so every token gets the key.
+     *
+     * @param  array<int,int|string>  $keys
+     */
+    public function state(object $state, array $keys, int $formId): void
+    {
+        if (method_exists($state, 'add_hashes')) {
+            $state->add_hashes($formId, self::INPUT, wp_hash('1'));
+        }
     }
 
     public function form(string $html): string

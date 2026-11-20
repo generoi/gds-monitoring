@@ -74,6 +74,14 @@ is sent:
 Like Gravity Forms, our script adds nothing in a browser driven by automation
 (Selenium, PhantomJS and the like), so those count as bots too.
 
+Some bots copy `version_hash` from the page's `gf_global`, where its value
+is, and post it with the HTML's mangled values. So the form's state token,
+which Gravity Forms signs, also records that the page printed our script, and
+from such a page `FormRefusals` logs a state failure only with
+`gds_monitoring_js`. `version_hash` still counts for a page from before this,
+and for a token Gravity Forms refuses whole (signed before an update changed
+how, as from a tab left open across the update), which can't be read.
+
 ## Reporting from other plugins
 
 A plugin reports to monitoring through two actions, which do nothing when this

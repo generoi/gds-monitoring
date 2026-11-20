@@ -90,6 +90,26 @@ test('a scriptless submission failing the state check is not logged', async ({ p
     expect(lines()).toEqual([]);
 });
 
+/**
+ * The same, from a bot that also copies version_hash out of the page's
+ * gf_global: the page printed our script, its token says so, and our marker
+ * is missing.
+ */
+test('a scriptless submission with a copied version_hash is not logged', async ({ page }) => {
+    site = setup('validate-state');
+    await fill(page);
+    const fields = await page.locator(`#gform_${site.form}`).evaluate((form: HTMLFormElement) => ({
+        ...Object.fromEntries(new FormData(form) as unknown as Iterable<[string, string]>),
+        version_hash: (window as unknown as { gf_global: { version_hash: string } }).gf_global.version_hash,
+    }));
+    fields.input_2 = 'medium';
+
+    const response = await page.request.post(site.page, { multipart: fields });
+
+    expect(await response.text()).toContain('gform_validation_error');
+    expect(lines()).toEqual([]);
+});
+
 /** A page whose Gravity Forms scripts fail to load, as when blocked or broken. */
 async function withoutGravityFormsScripts(page: Page): Promise<void> {
     await page.route('**/plugins/gravityforms/**/*.js*', (route) => route.abort());
