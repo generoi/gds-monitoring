@@ -53,8 +53,12 @@ is reported silent until it has fewer than 10 entries in 90 days.
 
 A form counts as placed when a published post's content embeds it (block or
 shortcode), a published post uses a synced pattern holding it, a block widget
-holds it, or it was viewed in the last 30 days. The last catches a form placed
-in theme code, unless every page showing it is served from cache.
+holds it, or it was viewed in the last 7 days. The last catches a form placed
+in theme code, unless every page showing it is served from cache. A form that
+is in content but in none that is published (a draft, a trashed page, an
+unused pattern) counts only views after that content last changed, so taking
+its page off the site stops its reports at once, while one also placed in
+theme code goes on being judged.
 
 ## Which script ran
 
