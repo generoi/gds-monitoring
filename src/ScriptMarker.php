@@ -79,6 +79,9 @@ final class ScriptMarker
     /**
      * Added on submit, not on load, so it is there whenever the form was
      * rendered; the listener on the document catches every form on the page.
+     * Also on a click in the form: a working Gravity Forms 3 script sends the
+     * form from its button's click with form.submit(), which fires no submit
+     * event.
      * Gravity Forms' own automation check, as its theme script words it.
      */
     private function script(): string
@@ -97,15 +100,17 @@ final class ScriptMarker
                     || d.__driver_unwrapped || d.__webdriver_unwrapped || d.__driver_evaluate || d.__selenium_unwrapped || d.__fxdriver_unwrapped
                     || e.getAttribute('selenium') || e.getAttribute('webdriver') || e.getAttribute('driver');
                 if (automated) return;
-                d.addEventListener('submit', function (event) {
-                    var form = event.target;
+                var mark = function (event) {
+                    var form = event.target && event.target.closest ? event.target.closest('form') : null;
                     if (!form || !/^gform_\d+$/.test(form.id) || form.querySelector('input[name="{$input}"]')) return;
                     var input = d.createElement('input');
                     input.type = 'hidden';
                     input.name = '{$input}';
                     input.value = '1';
                     form.appendChild(input);
-                }, true);
+                };
+                d.addEventListener('submit', mark, true);
+                d.addEventListener('click', mark, true);
             })();
             JS;
     }

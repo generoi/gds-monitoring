@@ -97,6 +97,7 @@ test('a scriptless submission failing the state check is not logged', async ({ p
  */
 test('a scriptless submission with a copied version_hash is not logged', async ({ page }) => {
     site = setup('validate-state');
+    test.skip(Number.parseInt(site.gf, 10) < 3, 'Gravity Forms 2.x has no state token to record our script in');
     await fill(page);
     const fields = await page.locator(`#gform_${site.form}`).evaluate((form: HTMLFormElement) => ({
         ...Object.fromEntries(new FormData(form) as unknown as Iterable<[string, string]>),
