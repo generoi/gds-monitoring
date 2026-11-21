@@ -51,10 +51,17 @@ Not covered: a feed that waits on purpose (until a payment completes) counts
 as not run; a finished campaign form left active and still on a published page
 is reported silent until it has fewer than 10 entries in 90 days.
 
-A form counts as placed when a published post's content embeds it (block or
-shortcode), a published post uses a synced pattern holding it, a block widget
-holds it, or it was viewed in the last 30 days. The last catches a form placed
-in theme code, unless every page showing it is served from cache.
+Which forms count as placed:
+
+1. A form in published content is placed: a published post's content embeds
+   it (block or shortcode), a published post uses a synced pattern holding
+   it, or a block widget holds it.
+2. A form only in content that isn't published (a draft, private, scheduled,
+   pending or trashed post, an unused synced pattern) is not placed, however
+   recently it was viewed.
+3. A form in no content at all is placed when it was viewed in the last 30
+   days. This catches a form placed in theme code, unless every page showing
+   it is served from cache.
 
 ## Which script ran
 

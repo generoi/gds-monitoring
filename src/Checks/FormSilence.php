@@ -13,9 +13,11 @@ use GeneroWP\Monitoring\Site;
  *
  * Only placed forms are judged: one in a published post's content (block or
  * shortcode), in a synced pattern a published post uses, or in a block
- * widget, or viewed in the last 30 days (a form placed in theme code leaves
- * no trace in content). A campaign form taken off its page stays quiet for
- * good, and that's not a form breaking.
+ * widget, or in no content at all and viewed in the last 30 days (a form
+ * placed in theme code leaves no trace in content). A form only in content
+ * that isn't published (a draft, a trashed page, an unused pattern) is not
+ * placed, however recently viewed. A campaign form taken off its page stays
+ * quiet for good, and that's not a form breaking.
  */
 final class FormSilence implements Scheduled
 {
@@ -109,14 +111,20 @@ final class FormSilence implements Scheduled
 
         $placed = [];
         $patterns = []; // a synced pattern's id => the forms in it
+        $content = []; // every form in content, placed or not
         $rows = $wpdb->get_results(
-            "SELECT ID, post_type, post_content FROM {$wpdb->posts} WHERE post_status = 'publish' AND post_type <> 'revision' AND post_content LIKE '%gravityform%'"
+            "SELECT ID, post_type, post_status, post_content FROM {$wpdb->posts} WHERE post_status NOT IN ('auto-draft', 'inherit') AND post_type <> 'revision' AND post_content LIKE '%gravityform%'"
         );
         foreach ($rows as $row) {
+            $forms = self::forms($row->post_content);
+            $content += array_fill_keys($forms, true);
+            if ($row->post_status !== 'publish') {
+                continue;
+            }
             if ($row->post_type === 'wp_block') {
-                $patterns[(int) $row->ID] = self::forms($row->post_content);
+                $patterns[(int) $row->ID] = $forms;
             } else {
-                $placed += array_fill_keys(self::forms($row->post_content), true);
+                $placed += array_fill_keys($forms, true);
             }
         }
 
@@ -152,7 +160,9 @@ final class FormSilence implements Scheduled
             gmdate('Y-m-d H:i:s', $now - 30 * DAY_IN_SECONDS)
         ));
 
-        $placed += array_fill_keys(array_map('intval', $viewed), true);
+        // Views place only a form in no content: one in content none of which
+        // is published was taken off the site, its views are from before.
+        $placed += array_diff_key(array_fill_keys(array_map('intval', $viewed), true), $content);
         set_transient(self::PLACED, $placed, 12 * HOUR_IN_SECONDS);
 
         return $placed;

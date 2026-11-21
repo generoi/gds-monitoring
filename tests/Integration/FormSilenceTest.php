@@ -220,4 +220,31 @@ class FormSilenceTest extends TestCase
 
         $this->assertCount(1, $this->lines);
     }
+
+    /**
+     * A form only on a draft was taken off the site: its views are from before.
+     */
+    public function test_a_viewed_form_only_on_a_draft_is_not_placed(): void
+    {
+        $now = time();
+        $formId = $this->quietForm($now);
+        $this->place($formId, 'draft');
+        \GFFormsModel::insert_form_view($formId);
+
+        (new FormSilence)->run($now);
+
+        $this->assertSame([], $this->lines);
+    }
+
+    public function test_a_viewed_form_only_in_an_unused_pattern_is_not_placed(): void
+    {
+        $now = time();
+        $formId = $this->quietForm($now);
+        $this->place($formId, type: 'wp_block');
+        \GFFormsModel::insert_form_view($formId);
+
+        (new FormSilence)->run($now);
+
+        $this->assertSame([], $this->lines);
+    }
 }
