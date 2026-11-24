@@ -10,7 +10,8 @@ use GeneroWP\Monitoring\ScriptMarker;
  * real person caught by a spam filter (a stale page failing state validation)
  * is seen and can be marked not spam. Reasons only bots give are skipped:
  * hundreds a month on some sites. A missing input Gravity Forms' script adds
- * is a bot's only when our own script didn't run either (ScriptMarker).
+ * is a bot's only when our own script didn't run either (ScriptMarker), and
+ * any entry posted to a URL that 404s is a bot's.
  */
 final class SpamEntries implements Check
 {
@@ -26,6 +27,11 @@ final class SpamEntries implements Check
     public function entryCreated(array $entry, array $form): void
     {
         if (($entry['status'] ?? '') !== 'spam' || ! class_exists('GFFormDisplay')) {
+            return;
+        }
+        // Posted to a URL that is no page: nobody was shown the form there, so
+        // a bot sent it straight to a made-up address, whatever the reason.
+        if (is_404()) {
             return;
         }
 
