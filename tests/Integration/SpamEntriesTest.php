@@ -44,6 +44,15 @@ class SpamEntriesTest extends TestCase
         );
     }
 
+    public function test_spam_posted_to_a_url_that_404s_is_skipped(): void
+    {
+        $GLOBALS['wp_query']->set_404();
+        $this->submitAsSpam('Honeypot Spam Filter', 'The form failed state validation before it was successfully submitted. This typically indicates bot activity or manual tampering.');
+        $GLOBALS['wp_query']->init();
+
+        $this->assertSame([], $this->lines);
+    }
+
     /**
      * @return array<string,array{string,string}>
      */
