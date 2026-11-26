@@ -110,6 +110,42 @@ class EntryErrorNotesTest extends TestCase
     }
 
     /**
+     * A notification to the visitor's own address, from an optional email
+     * field they left empty: Gravity Forms refuses to send it, and there is
+     * nobody to tell.
+     */
+    public function test_a_notification_to_an_empty_visitor_field_is_not_logged(): void
+    {
+        $formId = $this->form(['notifications' => ['n1' => [
+            'id' => 'n1', 'name' => 'Confirmation', 'isActive' => true, 'event' => 'form_submission',
+            'to' => '2', 'toType' => 'field', 'subject' => 'Thanks', 'message' => 'Hello',
+        ]]]);
+        $entryId = $this->entry($formId, time());
+        \GFAPI::send_notifications(\GFAPI::get_form($formId), \GFAPI::get_entry($entryId));
+
+        $this->assertSame([], $this->lines);
+    }
+
+    /**
+     * The same notification when the visitor filled the field in still logs
+     * a mail server refusal.
+     */
+    public function test_a_notification_to_a_filled_visitor_field_that_fails_is_logged(): void
+    {
+        $formId = $this->form(['notifications' => ['n1' => [
+            'id' => 'n1', 'name' => 'Confirmation', 'isActive' => true, 'event' => 'form_submission',
+            'to' => '2', 'toType' => 'field', 'subject' => 'Thanks', 'message' => 'Hello',
+        ]]]);
+        $entryId = $this->entry($formId, time());
+        \GFAPI::update_entry_field($entryId, '2','jane@example.com');
+        add_filter('pre_wp_mail', '__return_false');
+        \GFAPI::send_notifications(\GFAPI::get_form($formId), \GFAPI::get_entry($entryId));
+        remove_filter('pre_wp_mail', '__return_false');
+
+        $this->assertSame(["gds-monitoring: report gform blog 1: notification error form {$formId} entry {$entryId}: WordPress was unable to send the notification email."], $this->lines);
+    }
+
+    /**
      * What WordPress reports after the add-on's request to Mailchimp's API.
      */
     private function mailchimpResponse(int $code, string $title, string $detail): void
