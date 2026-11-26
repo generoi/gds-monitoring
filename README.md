@@ -63,6 +63,16 @@ Which forms count as placed:
    days. This catches a form placed in theme code, unless every page showing
    it is served from cache.
 
+## When a line comes in
+
+A line that keeps coming from a site set up wrong is fixed on that site, and
+the check stays as it is: skipping it here would hide the same mistake on every
+other site. Known causes and their fixes:
+
+| Line | Cause | Fix |
+|---|---|---|
+| `notification error … Cannot send email because the TO address is invalid` | The notification goes to a form field (the visitor's own email) that is optional, and this visitor left it empty | In the form's notification settings, add the condition "send if the field is not empty". The entry and the other notifications are fine |
+
 ## Which script ran
 
 Gravity Forms' script adds `version_hash` to a form as it is sent, so a
